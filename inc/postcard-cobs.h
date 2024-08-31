@@ -17,4 +17,6 @@ void postcard_cobs_encode_i16(struct cobs *cobs, int16_t value);
 void postcard_cobs_encode_i32(struct cobs *cobs, int32_t value);
 
 void postcard_cobs_encode_float(struct cobs *cobs, float value);
+
+void postcard_cobs_encode_discriminant(struct cobs *cobs, uint32_t value);
 #endif

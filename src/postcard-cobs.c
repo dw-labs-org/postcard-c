@@ -60,3 +60,7 @@ void postcard_cobs_encode_i32(struct cobs *cobs, int32_t value) {
 void postcard_cobs_encode_float(struct cobs *cobs, float value) {
   cobs_write_bytes(cobs, (uint8_t *)&value, 4);
 }
+
+void postcard_cobs_encode_discriminant(struct cobs *cobs, uint32_t value) {
+  postcard_cobs_encode_u32(cobs, value);
+}
