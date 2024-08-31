@@ -17,9 +17,6 @@ void cobs_reset(struct cobs *cobs) {
 
 // Inserts the framing 0 and the first marker byte
 void cobs_start_frame(struct cobs *cobs) {
-  // framing zero
-  *(cobs->next) = 0;
-  cobs->next++;
   // marker zero
   *(cobs->next) = 0;
   cobs->next++;

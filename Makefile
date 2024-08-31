@@ -20,9 +20,11 @@ TEST_TARGETS=$(patsubst $(TEST)/%.c, $(BIN_DIR)/%, $(TEST_SOURCES))
 
 STATIC_LIB=$(BUILD_DIR)/libpostcard.a
 
-all: $(TEST_TARGETS) $(STATIC_LIB)
 
-test: $(TEST_TARGETS)
+build: $(TEST_TARGETS) $(STATIC_LIB)
+
+test: build
+	./run_tests.sh
 
 clean:
 	rm $(BUILD_DIR)/* -f
