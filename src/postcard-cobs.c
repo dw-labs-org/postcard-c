@@ -5,9 +5,9 @@ void postcard_cobs_encode_u8(struct cobs *cobs, uint8_t value) {
 }
 
 void postcard_cobs_encode_u16(struct cobs *cobs, uint16_t value) {
-  if (value <= ((1 << 6) - 1)) {
+  if (value <= ((1 << 7) - 1)) {
     cobs_write_byte(cobs, 0xFF & value);
-  } else if (value <= ((1 << 13) - 1)) {
+  } else if (value <= ((1 << 14) - 1)) {
     cobs_write_byte(cobs, (0x7F & value) | (1 << 7));
     cobs_write_byte(cobs, value >> 7);
   } else {
@@ -18,16 +18,16 @@ void postcard_cobs_encode_u16(struct cobs *cobs, uint16_t value) {
 }
 
 void postcard_cobs_encode_u32(struct cobs *cobs, uint32_t value) {
-  if (value <= ((1 << 6) - 1)) {
+  if (value <= ((1 << 7) - 1)) {
     cobs_write_byte(cobs, 0xFF & value);
-  } else if (value <= ((1 << 13) - 1)) {
+  } else if (value <= ((1 << 14) - 1)) {
     cobs_write_byte(cobs, (0x7F & value) | (1 << 7));
     cobs_write_byte(cobs, value >> 7);
-  } else if (value <= ((1 << 20) - 1)) {
+  } else if (value <= ((1 << 21) - 1)) {
     cobs_write_byte(cobs, (0x7F & value) | (1 << 7));
     cobs_write_byte(cobs, (0x7F & (value >> 7)) | (1 << 7));
     cobs_write_byte(cobs, value >> 14);
-  } else if (value <= ((1 << 27) - 1)) {
+  } else if (value <= ((1 << 28) - 1)) {
     cobs_write_byte(cobs, (0x7F & value) | (1 << 7));
     cobs_write_byte(cobs, (0x7F & (value >> 7)) | (1 << 7));
     cobs_write_byte(cobs, (0x7F & (value >> 14)) | (1 << 7));
