@@ -3,6 +3,7 @@ CC=gcc
 SRC=src
 SOURCES=$(wildcard $(SRC)/*.c)
 OBJECTS=$(patsubst $(SRC)/%.c, $(BUILD_DIR)/%.o, $(SOURCES))
+INCLUDES=-Iinc
 
 # Unity
 UNITY_SOURCE=$(TEST)/Unity/src/unity.c
@@ -12,12 +13,20 @@ UNITY_OBJECT=$(BUILD_DIR)/unity.o
 TEST=test
 # Test obj directory
 BUILD_DIR=$(TEST)/build
+BIN_DIR=$(TEST)/bin
 TEST_SOURCES=$(wildcard $(TEST)/*.c)
 BUILD_DIRECTS=$(patsubst $(TEST)/%.c, $(BUILD_DIR)/%.o, $(TEST_SOURCES))
-TEST_TARGETS=$(patsubst $(TEST)/%.c, $(TEST)/bin/%, $(TEST_SOURCES))
+TEST_TARGETS=$(patsubst $(TEST)/%.c, $(BIN_DIR)/%, $(TEST_SOURCES))
 
 
 all: $(TEST_TARGETS)
+
+test: $(TEST_TARGETS)
+
+clean:
+	rm $(BUILD_DIR)/* -f
+	rm $(BIN_DIR)/* -f
+
 
 print:
 	@echo Test Sources $(TEST_SOURCES)
@@ -31,11 +40,11 @@ $(TEST_TARGETS) : $(BUILD_DIRECTS) $(OBJECTS) $(UNITY_OBJECT)
 
 # Compile each test file into obj
 $(BUILD_DIR)/%.o : $(TEST)/%.c
-	$(CC) $< -c -o $@
+	$(CC) $(INCLUDES) $< -c -o $@
 
 # Compile each library file into obj
-$(OBJECTS): $(SOURCES)
-	$(CC) $< -c -o $@
+$(BUILD_DIR)/%.o: $(SRC)/%.c
+	$(CC) $(INCLUDES) $< -c -o $@
 
 # Compile unity
 $(UNITY_OBJECT): $(UNITY_SOURCE)
