@@ -32,6 +32,11 @@ uint32_t encode_u16(uint8_t *buf, uint16_t value) {
   }
 }
 
+uint32_t encode_i16(uint8_t *buf, int8_t value) {
+  *buf = (uint8_t)((value << 1) ^ (value >> 7));
+  return 1;
+}
+
 uint32_t encode_float(uint8_t *buf, float value) {
   memcpy(buf, &value, 4);
   return 4;

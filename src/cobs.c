@@ -7,12 +7,12 @@ void cobs_init(struct cobs *cobs, uint8_t *buf, uint32_t length) {
   cobs->buf = buf;
   cobs->next = buf;
   cobs->length = length;
-  cobs->bytes_since_zero = 1;
+  cobs->bytes_since_zero = 0;
 }
 
 void cobs_reset(struct cobs *cobs) {
   cobs->next = cobs->buf;
-  cobs->bytes_since_zero;
+  cobs->bytes_since_zero = 0;
 }
 
 // Inserts the framing 0 and the first marker byte

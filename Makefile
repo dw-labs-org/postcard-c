@@ -35,16 +35,16 @@ print:
 
 
 # Build each test
-$(TEST_TARGETS) : $(BUILD_DIRECTS) $(OBJECTS) $(UNITY_OBJECT)
-	$(CC) $< $(OBJECTS) $(UNITY_OBJECT) -o $@
+$(TEST_TARGETS) : $(BIN_DIR)%: $(BUILD_DIR)%.o $(OBJECTS) $(UNITY_OBJECT)
+	$(CC) -Wall $< $(OBJECTS) $(UNITY_OBJECT) -o $@
 
 # Compile each test file into obj
 $(BUILD_DIR)/%.o : $(TEST)/%.c
-	$(CC) $(INCLUDES) $< -c -o $@
+	$(CC) -Wall $(INCLUDES) $< -c -o $@
 
 # Compile each library file into obj
 $(BUILD_DIR)/%.o: $(SRC)/%.c
-	$(CC) $(INCLUDES) $< -c -o $@
+	$(CC) -Wall $(INCLUDES) $< -c -o $@
 
 # Compile unity
 $(UNITY_OBJECT): $(UNITY_SOURCE)
