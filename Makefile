@@ -18,8 +18,9 @@ TEST_SOURCES=$(wildcard $(TEST)/*.c)
 BUILD_DIRECTS=$(patsubst $(TEST)/%.c, $(BUILD_DIR)/%.o, $(TEST_SOURCES))
 TEST_TARGETS=$(patsubst $(TEST)/%.c, $(BIN_DIR)/%, $(TEST_SOURCES))
 
+STATIC_LIB=$(BUILD_DIR)/libpostcard.a
 
-all: $(TEST_TARGETS)
+all: $(TEST_TARGETS) $(STATIC_LIB)
 
 test: $(TEST_TARGETS)
 
@@ -45,6 +46,10 @@ $(BUILD_DIR)/%.o : $(TEST)/%.c
 # Compile each library file into obj
 $(BUILD_DIR)/%.o: $(SRC)/%.c
 	$(CC) -Wall $(INCLUDES) $< -c -o $@
+
+# Create static library
+$(STATIC_LIB): $(OBJECTS)
+	ar rcs $@ $^
 
 # Compile unity
 $(UNITY_OBJECT): $(UNITY_SOURCE)

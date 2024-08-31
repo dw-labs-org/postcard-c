@@ -2,5 +2,8 @@
   "files.associations": {
     "memory.h": "c",
     "cobs.h": "c"
-  }
+  },
+  "rust-analyzer.linkedProjects": [
+    "test/rust/Cargo.toml"
+  ]
 }
