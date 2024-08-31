@@ -35,6 +35,10 @@ impl<const N: usize> Cobs<N> {
         unsafe { cobs_end_frame(&mut self.cobs as *mut cobs) }
     }
 
+    fn reset(&mut self) {
+        unsafe { cobs_reset(&mut self.cobs as *mut cobs) };
+    }
+
     fn write_byte(&mut self, byte: u8) {
         unsafe { cobs_write_byte(&mut self.cobs as *mut cobs, byte) };
     }
