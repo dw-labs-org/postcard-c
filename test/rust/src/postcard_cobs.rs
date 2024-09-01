@@ -1,5 +1,7 @@
 use crate::{
-    cobs, postcard_cobs_encode_u16, postcard_cobs_encode_u32, postcard_cobs_encode_u8, Cobs,
+    cobs, postcard_cobs_encode_i16, postcard_cobs_encode_i32, postcard_cobs_encode_i64,
+    postcard_cobs_encode_i8, postcard_cobs_encode_u16, postcard_cobs_encode_u32,
+    postcard_cobs_encode_u64, postcard_cobs_encode_u8, Cobs,
 };
 
 struct PostcardCobs<const N: usize> {
@@ -38,20 +40,37 @@ impl<const N: usize> PostcardCobs<N> {
             postcard_cobs_encode_u32(&mut self.cobs.cobs as *mut cobs, value);
         }
     }
+
+    fn encode_u64(&mut self, value: u64) {
+        unsafe {
+            postcard_cobs_encode_u64(&mut self.cobs.cobs as *mut cobs, value);
+        }
+    }
+
+    fn encode_i8(&mut self, value: i8) {
+        unsafe { postcard_cobs_encode_i8(&mut self.cobs.cobs as *mut cobs, value) }
+    }
+
+    fn encode_i16(&mut self, value: i16) {
+        unsafe { postcard_cobs_encode_i16(&mut self.cobs.cobs as *mut cobs, value) }
+    }
+    fn encode_i32(&mut self, value: i32) {
+        unsafe { postcard_cobs_encode_i32(&mut self.cobs.cobs as *mut cobs, value) }
+    }
+    fn encode_i64(&mut self, value: i64) {
+        unsafe { postcard_cobs_encode_i64(&mut self.cobs.cobs as *mut cobs, value) }
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use std::ops::DerefMut;
 
     use rand::Rng;
 
-    use crate::{postcard_cobs::PostcardCobs, Cobs};
+    use crate::postcard_cobs::PostcardCobs;
 
-    /// Check encoding of u8s
     #[test]
     fn u8() {
-        // buffer to store data
         let mut encoder = PostcardCobs::<256>::new();
         for value in 0u8..255 {
             encoder.cobs.start_frame();
@@ -65,10 +84,8 @@ mod test {
         }
     }
 
-    /// Check encoding of u16s
     #[test]
     fn u16() {
-        // buffer to store data
         let mut encoder = PostcardCobs::<256>::new();
         for value in 0u16..u16::MAX {
             encoder.cobs.start_frame();
@@ -82,11 +99,9 @@ mod test {
         }
     }
 
-    /// Check encoding of u32s
     #[test]
     fn u32() {
         let mut rng = rand::thread_rng();
-        // buffer to store data
         let mut encoder = PostcardCobs::<256>::new();
         for i in 0..1000000 {
             let value = rng.gen();
@@ -96,6 +111,88 @@ mod test {
             assert_eq!(
                 postcard::from_bytes_cobs::<u32>(&mut encoder.buffer())
                     .unwrap_or_else(|_| panic!("value {value}")),
+                value
+            );
+            encoder.cobs.reset();
+        }
+    }
+
+    #[test]
+    fn u64() {
+        let mut rng = rand::thread_rng();
+        let mut encoder = PostcardCobs::<256>::new();
+        for i in 0..1000000 {
+            let value = rng.gen();
+            encoder.cobs.start_frame();
+            encoder.encode_u64(value);
+            encoder.cobs.end_frame();
+            assert_eq!(
+                postcard::from_bytes_cobs::<u64>(&mut encoder.buffer())
+                    .unwrap_or_else(|_| panic!("value {value}")),
+                value
+            );
+            encoder.cobs.reset();
+        }
+    }
+
+    #[test]
+    fn i8() {
+        let mut encoder = PostcardCobs::<256>::new();
+        for value in i8::MIN..i8::MAX {
+            encoder.cobs.start_frame();
+            encoder.encode_i8(value);
+            encoder.cobs.end_frame();
+            assert_eq!(
+                postcard::from_bytes_cobs::<i8>(&mut encoder.buffer()).unwrap(),
+                value
+            );
+            encoder.cobs.reset();
+        }
+    }
+
+    #[test]
+    fn i16() {
+        let mut encoder = PostcardCobs::<256>::new();
+        for value in i16::MIN..i16::MAX {
+            encoder.cobs.start_frame();
+            encoder.encode_i16(value);
+            encoder.cobs.end_frame();
+            assert_eq!(
+                postcard::from_bytes_cobs::<i16>(&mut encoder.buffer()).unwrap(),
+                value
+            );
+            encoder.cobs.reset();
+        }
+    }
+
+    #[test]
+    fn i32() {
+        let mut encoder = PostcardCobs::<256>::new();
+        let mut rng = rand::thread_rng();
+        for i in 0..1000000 {
+            let value = rng.gen();
+            encoder.cobs.start_frame();
+            encoder.encode_i32(value);
+            encoder.cobs.end_frame();
+            assert_eq!(
+                postcard::from_bytes_cobs::<i32>(&mut encoder.buffer()).unwrap(),
+                value
+            );
+            encoder.cobs.reset();
+        }
+    }
+
+    #[test]
+    fn i64() {
+        let mut encoder = PostcardCobs::<256>::new();
+        let mut rng = rand::thread_rng();
+        for i in 0..1000000 {
+            let value = rng.gen();
+            encoder.cobs.start_frame();
+            encoder.encode_i64(value);
+            encoder.cobs.end_frame();
+            assert_eq!(
+                postcard::from_bytes_cobs::<i64>(&mut encoder.buffer()).unwrap(),
                 value
             );
             encoder.cobs.reset();

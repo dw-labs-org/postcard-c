@@ -9,6 +9,9 @@ fn main() {
     // shared library.
     println!("cargo:rustc-link-lib=static=postcard");
 
+    // Force rebuild if lib changes
+    println!("cargo:rerun-if-changed=../build/libpostcard.a");
+
     // The bindgen::Builder is the main entry point
     // to bindgen, and lets you build up options for
     // the resulting bindings.
@@ -28,5 +31,5 @@ fn main() {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     bindings
         .write_to_file(out_path.join("bindings.rs"))
-        .expect("Couldn't write bindings!");
+        .expect("Couldn't write binding s!");
 }

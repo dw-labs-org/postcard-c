@@ -396,7 +396,7 @@ void i32_encoding(void) {
 // not needed when using generate_test_runner.rb
 int main(void) {
   UNITY_BEGIN();
-  RUN_TEST(u32_encoding);
+  RUN_TEST(u16_encoding);
   RUN_TEST(u32_encoding);
   RUN_TEST(i16_encoding);
   RUN_TEST(i32_encoding);
