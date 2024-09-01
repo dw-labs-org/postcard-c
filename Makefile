@@ -22,6 +22,7 @@ STATIC_LIB=$(BUILD_DIR)/libpostcard.a
 
 
 build: $(TEST_TARGETS) $(STATIC_LIB)
+	touch test/rust/build.rs
 	cargo build --manifest-path test/rust/Cargo.toml
 
 test: build

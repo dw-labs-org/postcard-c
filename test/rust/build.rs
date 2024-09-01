@@ -7,7 +7,7 @@ fn main() {
 
     // Tell cargo to tell rustc to link the system bzip2
     // shared library.
-    println!("cargo:rustc-link-lib=static=postcard");
+    println!("cargo:rustc-link-lib=postcard");
 
     // Force rebuild if lib changes
     println!("cargo:rerun-if-changed=../build/libpostcard.a");

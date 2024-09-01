@@ -339,6 +339,7 @@ dependencies = [
  "heapless 0.8.0",
  "postcard",
  "rand",
+ "serde",
 ]
 
 [[package]]

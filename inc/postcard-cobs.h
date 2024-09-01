@@ -2,7 +2,10 @@
 #ifndef _POSTCARD_COBS_H
 #define _POSTCARD_COBS_H
 #include "../inc/cobs.h"
+#include "stdbool.h"
 #include "stdint.h"
+
+void postcard_cobs_encode_bool(struct cobs *cobs, bool value);
 
 void postcard_cobs_encode_u8(struct cobs *cobs, uint8_t value);
 
@@ -22,5 +25,12 @@ void postcard_cobs_encode_i64(struct cobs *cobs, int64_t value);
 
 void postcard_cobs_encode_float(struct cobs *cobs, float value);
 
+void postcard_cobs_encode_double(struct cobs *cobs, double value);
+
 void postcard_cobs_encode_discriminant(struct cobs *cobs, uint32_t value);
+
+void postcard_cobs_encode_length(struct cobs *cobs, uint32_t length);
+
+void postcard_cobs_encode_byte_array(struct cobs *cobs, uint8_t *arr,
+                                     uint32_t length);
 #endif

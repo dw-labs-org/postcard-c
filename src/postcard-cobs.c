@@ -1,5 +1,9 @@
 #include "postcard-cobs.h"
 
+void postcard_cobs_encode_bool(struct cobs *cobs, bool value) {
+  cobs_write_byte(cobs, value);
+}
+
 void postcard_cobs_encode_u8(struct cobs *cobs, uint8_t value) {
   cobs_write_byte(cobs, value);
 }
@@ -136,6 +140,20 @@ void postcard_cobs_encode_float(struct cobs *cobs, float value) {
   cobs_write_bytes(cobs, (uint8_t *)&value, 4);
 }
 
+void postcard_cobs_encode_double(struct cobs *cobs, double value) {
+  cobs_write_bytes(cobs, (uint8_t *)&value, 8);
+}
+
 void postcard_cobs_encode_discriminant(struct cobs *cobs, uint32_t value) {
   postcard_cobs_encode_u32(cobs, value);
+}
+
+void postcard_cobs_encode_length(struct cobs *cobs, uint32_t length) {
+  postcard_cobs_encode_u32(cobs, length);
+}
+
+void postcard_cobs_encode_byte_array(struct cobs *cobs, uint8_t *arr,
+                                     uint32_t length) {
+  postcard_cobs_encode_length(cobs, length);
+  cobs_write_bytes(cobs, arr, length);
 }
