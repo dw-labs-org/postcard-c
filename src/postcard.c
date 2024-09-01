@@ -1,4 +1,4 @@
-#include "../inc/postcard.h"
+#include "postcard.h"
 
 #include "memory.h"
 

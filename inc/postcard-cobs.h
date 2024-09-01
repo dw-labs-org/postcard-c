@@ -1,7 +1,7 @@
 // Encoding datatypes using the postcard format to a cobs buffers
 #ifndef _POSTCARD_COBS_H
 #define _POSTCARD_COBS_H
-#include "../inc/cobs.h"
+#include "cobs.h"
 #include "stdbool.h"
 #include "stdint.h"
 
