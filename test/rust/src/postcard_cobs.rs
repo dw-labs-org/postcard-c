@@ -88,13 +88,14 @@ mod test {
         let mut rng = rand::thread_rng();
         // buffer to store data
         let mut encoder = PostcardCobs::<256>::new();
-        for i in 0u16..u16::MAX {
+        for i in 0..1000000 {
             let value = rng.gen();
             encoder.cobs.start_frame();
             encoder.encode_u32(value);
             encoder.cobs.end_frame();
             assert_eq!(
-                postcard::from_bytes_cobs::<u32>(&mut encoder.buffer()).unwrap(),
+                postcard::from_bytes_cobs::<u32>(&mut encoder.buffer())
+                    .unwrap_or_else(|_| panic!("value {value}")),
                 value
             );
             encoder.cobs.reset();
