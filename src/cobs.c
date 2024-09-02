@@ -66,6 +66,23 @@ postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte) {
   }
 }
 
+void cobs_write_byte_unchecked(struct cobs *cobs, uint8_t byte) {
+  // if been no 0 for 255 bytes, insert byte and reset counter
+  if (cobs->zero == 255) {
+    cobs_insert_zero(cobs);
+  }
+
+  // If byte is zero, insert marker
+  if (byte == 0) {
+    return cobs_insert_zero(cobs);
+  } else {
+    // otherwise insert byte
+    *(cobs->next) = byte;
+    cobs->next++;
+    cobs->zero++;
+  }
+}
+
 // Write an array of bytes to the buffer with cobs encoding
 postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size) {
