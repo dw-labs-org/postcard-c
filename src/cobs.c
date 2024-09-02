@@ -69,7 +69,7 @@ void cobs_start_frame_decode(struct cobs *cobs) {
   // First byte marks position of next zero
   cobs->zero = *(cobs->buf);
   cobs->next = cobs->buf + 1;
-  cobs->overhead = false;
+  cobs->overhead = cobs->zero == 0xFF;
 }
 
 void cobs_end_frame_decode(struct cobs *cobs) {}
@@ -84,7 +84,7 @@ void cobs_read_byte(struct cobs *cobs, uint8_t *value) {
     if (cobs->overhead) {
       cobs->overhead = cobs->zero == 0xFF;
       cobs->next++;
-      cobs_read_byte(cobs, value);
+      return cobs_read_byte(cobs, value);
     } else {
       cobs->overhead = cobs->zero == 0xFF;
       *value = 0;
