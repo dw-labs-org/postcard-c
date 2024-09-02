@@ -21,16 +21,20 @@ TEST_TARGETS=$(patsubst $(TEST)/%.c, $(BIN_DIR)/%, $(TEST_SOURCES))
 STATIC_LIB=$(BUILD_DIR)/libpostcard.a
 
 
-build: $(TEST_TARGETS) $(STATIC_LIB)
+build: mkdirs $(TEST_TARGETS) $(STATIC_LIB)
 	touch test/rust/build.rs
 	cargo build --manifest-path test/rust/Cargo.toml
 
 test: build
 	./run_tests.sh
 
+mkdirs:
+	mkdir $(BUILD_DIR) -p
+	mkdir $(BIN_DIR) -p
+
 clean:
-	rm $(BUILD_DIR)/* -f
-	rm $(BIN_DIR)/* -f
+	rm $(BUILD_DIR) -rf
+	rm $(BIN_DIR) -rf
 
 
 print:
