@@ -13,24 +13,24 @@ The library supports the following serde data types:
 
 The following can be constructed from the primitives supported above:
 - option:
-  - None: 0u8
-  - Some: 1u8 followed by contained type
+  - None: **0u8**
+  - Some: **1u8** followed by contained type
 - newtype_variant:
-  - unit_variant followed by contained type
+  - **unit_variant** followed by contained type
 - seq:
-  - length as u16|u32|u64 followed by each element in the array
+  - length as **u16|u32|u64** followed by each element in the array
 - tuple:
   - each element in order of definition
 - tuple_struct
-  - tuple
+  - **tuple**
 - tuple_variant
-  - unit_variant followed by tuple
+  - **unit_variant** followed by **tuple**
 - map
-  - length as u16|u32|u64 followed by each key value pair as a tuple
+  - length as **u16|u32|u64** followed by each key value pair as a **tuple**
 - struct
   - each element in the order of definition
 - struct_variant
-  - unit_variant followed by struct
+  - **unit_variant** followed by **struct**
 
 Not yet supported
 - i128
