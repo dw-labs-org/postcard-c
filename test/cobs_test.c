@@ -91,6 +91,15 @@ uint32_t example_10_encoded(uint8_t *buf) {
   return n + 4;
 }
 
+uint32_t example_11_encoded(uint8_t *buf) {
+  buf[0] = 0xFE;
+  uint32_t n = write_seq(buf + 1, 0x03, 0xFF);
+  buf[n + 1] = 2;
+  buf[n + 2] = 0x1;
+  buf[n + 3] = 0x00;
+  return n + 4;
+}
+
 uint32_t example_1_unencoded(uint8_t *buf) {
   uint8_t data[] = {0};
   memcpy(buf, data, 1);
@@ -144,6 +153,13 @@ uint32_t example_10_unencoded(uint8_t *buf) {
   return n + 1;
 }
 
+uint32_t example_11_unencoded(uint8_t *buf) {
+  uint32_t n = write_seq(buf, 0x03, 0xFF);
+  buf[n] = 0;
+  buf[n + 1] = 1;
+  return n + 2;
+}
+
 // Picks the example, writes to buf, returns the number of bytes written
 uint32_t example_unencoded(uint8_t example, uint8_t *buf) {
   switch (example) {
@@ -176,6 +192,9 @@ uint32_t example_unencoded(uint8_t example, uint8_t *buf) {
       break;
     case 10:
       return example_10_unencoded(buf);
+      break;
+    case 11:
+      return example_11_unencoded(buf);
       break;
     default:
       return 0;
@@ -215,6 +234,9 @@ uint32_t example_encoded(uint8_t example, uint8_t *buf) {
     case 10:
       return example_10_encoded(buf);
       break;
+    case 11:
+      return example_11_encoded(buf);
+      break;
 
     default:
       return 0;
@@ -222,7 +244,7 @@ uint32_t example_encoded(uint8_t example, uint8_t *buf) {
 }
 
 void wikipedia_examples_encode(void) {
-  for (uint8_t example = 1; example <= 10; example++) {
+  for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
     uint8_t encoded[300];
     uint8_t buf[300];
@@ -241,7 +263,7 @@ void wikipedia_examples_encode(void) {
 }
 
 void wikipedia_examples_decode(void) {
-  for (uint8_t example = 1; example <= 10; example++) {
+  for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
     uint8_t encoded[300];
     uint32_t encoded_length = example_encoded(example, encoded);
