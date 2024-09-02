@@ -8,6 +8,22 @@ void setUp(void) {}
 void tearDown(void) {
   // clean stuff up here
 }
+uint32_t write_seq(uint8_t *buf, uint8_t start, uint8_t end) {
+  uint32_t i = 0;
+  while (start <= end) {
+    buf[i] = start;
+    i++;
+    start++;
+  }
+  return i;
+}
+
+void example_7_unencoded(uint8_t *buf) { write_seq(buf, 0x01, 0xFE); }
+void example_7_encoded(uint8_t *buf) {
+  buf[0] = 0xFF;
+  uint32_t n = write_seq(buf + 1, 0x01, 0xFE);
+  buf[n + 1] = 0;
+}
 
 void wikipedia_examples_encode(void) {
   // init buffer and cobs struct
@@ -145,7 +161,29 @@ void wikipedia_examples_decode(void) {
     cobs_decode_in_place(&cobs);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
   }
+  {
+    // wiki example 6
+    uint8_t buf[] = {2, 0x11, 1, 1, 1, 0};
+    uint8_t expected[] = {0x11, 0, 0, 0};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 6);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
+  }
+  {
+    // wiki example 7
+    uint32_t size = 270;
+    uint8_t encoded[size];
+    example_7_encoded(encoded);
+    uint8_t unencoded[size];
+    example_7_unencoded(unencoded);
+    struct cobs cobs;
+    cobs_init(&cobs, encoded, size);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, 254);
+  }
 }
+
 // not needed when using generate_test_runner.rb
 int main(void) {
   UNITY_BEGIN();
