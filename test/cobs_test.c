@@ -15,29 +15,29 @@ void wikipedia_examples(void) {
   struct cobs cobs;
   cobs_init(&cobs, buf, 8);
   // wiki example 1
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(1, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(0, buf[2]);
   cobs_reset(&cobs);
   // wiki example 2
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0);
   cobs_write_byte(&cobs, 0);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(1, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(1, buf[2]);
   TEST_ASSERT_EQUAL_UINT8(0, buf[3]);
   cobs_reset(&cobs);
   // wiki example 3
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0);
   cobs_write_byte(&cobs, 0x11);
   cobs_write_byte(&cobs, 0);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(2, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(0x11, buf[2]);
@@ -45,12 +45,12 @@ void wikipedia_examples(void) {
   TEST_ASSERT_EQUAL_UINT8(0, buf[4]);
   cobs_reset(&cobs);
   // wiki example 4
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0x11);
   cobs_write_byte(&cobs, 0x22);
   cobs_write_byte(&cobs, 0);
   cobs_write_byte(&cobs, 0x33);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(3, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(0x22, buf[2]);
@@ -59,12 +59,12 @@ void wikipedia_examples(void) {
   TEST_ASSERT_EQUAL_UINT8(0, buf[5]);
   cobs_reset(&cobs);
   // wiki example 5
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0x11);
   cobs_write_byte(&cobs, 0x22);
   cobs_write_byte(&cobs, 0x33);
   cobs_write_byte(&cobs, 0x44);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(5, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(0x22, buf[2]);
@@ -73,12 +73,12 @@ void wikipedia_examples(void) {
   TEST_ASSERT_EQUAL_UINT8(0, buf[5]);
   cobs_reset(&cobs);
   // wiki example 6
-  cobs_start_frame(&cobs);
+  cobs_start_frame_encode(&cobs);
   cobs_write_byte(&cobs, 0x11);
   cobs_write_byte(&cobs, 0);
   cobs_write_byte(&cobs, 0);
   cobs_write_byte(&cobs, 0);
-  cobs_end_frame(&cobs);
+  cobs_end_frame_encode(&cobs);
   TEST_ASSERT_EQUAL_UINT8(2, buf[0]);
   TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
   TEST_ASSERT_EQUAL_UINT8(1, buf[2]);
