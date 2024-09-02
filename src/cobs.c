@@ -33,6 +33,7 @@ postcard_return_t cobs_encode(struct cobs *cobs, uint8_t *buf, uint32_t size,
   cobs_start_frame_encode(cobs);
   postcard_return_t result = cobs_write_bytes(cobs, buf, size);
   if (result != POSTCARD_SUCCESS) {
+    *written = cobs->next - cobs->buf;
     return result;
   }
   result = cobs_end_frame_encode(cobs);
@@ -69,7 +70,10 @@ postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte) {
 postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
-    cobs_write_byte(cobs, bytes[i]);
+    postcard_return_t result = cobs_write_byte(cobs, bytes[i]);
+    if (result != POSTCARD_SUCCESS) {
+      return result;
+    }
   }
   return POSTCARD_SUCCESS;
 }

@@ -280,10 +280,28 @@ void wikipedia_examples_decode(void) {
   }
 }
 
+void encode_overflow(void) {
+  uint8_t unencoded[300];
+  uint8_t encoded[300];
+  uint8_t buf[300];
+  example_encoded(7, encoded);
+  uint32_t decoded_length = example_unencoded(7, unencoded);
+  struct cobs cobs;
+  cobs_init(&cobs, buf, 200);
+
+  uint32_t encoded_length;
+  TEST_ASSERT_EQUAL(
+      POSTCARD_COBS_ENCODE_OVERFLOW,
+      cobs_encode(&cobs, unencoded, decoded_length, &encoded_length));
+
+  TEST_ASSERT_EQUAL_UINT32(200, encoded_length);
+}
+
 // not needed when using generate_test_runner.rb
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(wikipedia_examples_encode);
   RUN_TEST(wikipedia_examples_decode);
+  RUN_TEST(encode_overflow);
   return UNITY_END();
 }
