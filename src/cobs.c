@@ -88,14 +88,16 @@ void cobs_read_byte(struct cobs *cobs, uint8_t *value) {
   cobs->next++;
 }
 
-void cobs_decode(struct cobs *cobs, uint8_t *buf) {
+void cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t *length) {
+  uint8_t *buf_ptr = buf;
   cobs_start_frame_decode(cobs);
   while (*cobs->next != 0) {
-    cobs_read_byte(cobs, buf++);
+    cobs_read_byte(cobs, buf_ptr++);
   }
+  *length = buf_ptr - buf;
 }
 
-void cobs_decode_in_place(struct cobs *cobs) {
+void cobs_decode_in_place(struct cobs *cobs, uint32_t *length) {
   uint8_t *buf_ptr = cobs->buf;
-  cobs_decode(cobs, buf_ptr);
+  cobs_decode(cobs, buf_ptr, length);
 }

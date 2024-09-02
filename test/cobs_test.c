@@ -1,6 +1,7 @@
 #include "cobs.h"
 
 #include "Unity/src/unity.h"
+#include "memory.h"
 #include "stdint.h"
 
 void setUp(void) {}
@@ -18,11 +19,147 @@ uint32_t write_seq(uint8_t *buf, uint8_t start, uint8_t end) {
   return i;
 }
 
-void example_7_unencoded(uint8_t *buf) { write_seq(buf, 0x01, 0xFE); }
-void example_7_encoded(uint8_t *buf) {
+uint32_t example_1_encoded(uint8_t *buf) {
+  uint8_t data[] = {1, 1, 0};
+  memcpy(buf, data, 3);
+  return 3;
+}
+
+uint32_t example_2_encoded(uint8_t *buf) {
+  uint8_t data[] = {1, 1, 1, 0};
+  memcpy(buf, data, 4);
+  return 4;
+}
+
+uint32_t example_3_encoded(uint8_t *buf) {
+  uint8_t data[] = {1, 2, 0x11, 1, 0};
+  memcpy(buf, data, 5);
+  return 5;
+}
+
+uint32_t example_4_encoded(uint8_t *buf) {
+  uint8_t data[] = {3, 0x11, 0x22, 2, 0x33, 0};
+  memcpy(buf, data, 6);
+  return 6;
+}
+
+uint32_t example_5_encoded(uint8_t *buf) {
+  uint8_t data[] = {5, 0x11, 0x22, 0x33, 0x44, 0};
+  memcpy(buf, data, 6);
+  return 6;
+}
+
+uint32_t example_6_encoded(uint8_t *buf) {
+  uint8_t data[] = {2, 0x11, 1, 1, 1, 0};
+  memcpy(buf, data, 6);
+  return 6;
+}
+
+uint32_t example_7_encoded(uint8_t *buf) {
   buf[0] = 0xFF;
   uint32_t n = write_seq(buf + 1, 0x01, 0xFE);
   buf[n + 1] = 0;
+  return 256;
+}
+
+uint32_t example_1_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0};
+  memcpy(buf, data, 1);
+  return 1;
+}
+
+uint32_t example_2_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0, 0};
+  memcpy(buf, data, 2);
+  return 2;
+}
+uint32_t example_3_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0, 0x11, 0};
+  memcpy(buf, data, 3);
+  return 3;
+}
+
+uint32_t example_4_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0x11, 0x22, 0, 0x33};
+  memcpy(buf, data, 4);
+  return 4;
+}
+
+uint32_t example_5_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0x11, 0x22, 0x33, 0x44};
+  memcpy(buf, data, 4);
+  return 4;
+}
+
+uint32_t example_6_unencoded(uint8_t *buf) {
+  uint8_t data[] = {0x11, 0, 0, 0};
+  memcpy(buf, data, 4);
+  return 4;
+}
+
+uint32_t example_7_unencoded(uint8_t *buf) {
+  write_seq(buf, 0x01, 0xFE);
+  return 254;
+}
+
+// Picks the example, writes to buf, returns the number of bytes written
+uint32_t example_unencoded(uint8_t example, uint8_t *buf) {
+  switch (example) {
+    case 1:
+      return example_1_unencoded(buf);
+      break;
+    case 2:
+      return example_2_unencoded(buf);
+      break;
+    case 3:
+      return example_3_unencoded(buf);
+      break;
+    case 4:
+      return example_4_unencoded(buf);
+      break;
+    case 5:
+      return example_5_unencoded(buf);
+      break;
+    case 6:
+      return example_6_unencoded(buf);
+      break;
+    case 7:
+      return example_7_unencoded(buf);
+      break;
+
+    default:
+      return 0;
+  }
+}
+
+// Picks the example, writes to buf, returns the number of bytes written
+uint32_t example_encoded(uint8_t example, uint8_t *buf) {
+  switch (example) {
+    case 1:
+      return example_1_encoded(buf);
+      break;
+    case 2:
+      return example_2_encoded(buf);
+      break;
+    case 3:
+      return example_3_encoded(buf);
+      break;
+    case 4:
+      return example_4_encoded(buf);
+      break;
+    case 5:
+      return example_5_encoded(buf);
+      break;
+    case 6:
+      return example_6_encoded(buf);
+      break;
+    case 7:
+      return example_7_encoded(buf);
+      break;
+
+    default:
+      return 0;
+  }
 }
 
 void wikipedia_examples_encode(void) {
@@ -105,82 +242,17 @@ void wikipedia_examples_encode(void) {
 }
 
 void wikipedia_examples_decode(void) {
-  {
-    // wiki example 1
-    uint8_t buf[] = {1, 1, 0};
-    uint8_t expected[] = {0};
+  for (uint8_t example = 1; example <= 7; example++) {
+    uint8_t unencoded[300];
+    uint8_t encoded[300];
+    uint32_t encoded_length = example_encoded(example, encoded);
+    uint32_t decoded_length_expected = example_unencoded(example, unencoded);
     struct cobs cobs;
-    cobs_init(&cobs, buf, 3);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 1);
-  }
-
-  {
-    // wiki example 2
-    uint8_t buf[] = {1, 1, 1, 0};
-    uint8_t expected[] = {0, 0};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 4);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 2);
-  }
-
-  {
-    // wiki example 3
-    uint8_t buf[] = {1, 2, 0x11, 1, 0};
-    uint8_t expected[] = {0, 0x11, 0};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 5);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 3);
-  }
-  {
-    // wiki example 4
-    uint8_t buf[] = {3, 0x11, 0x22, 0x2, 0x33, 0};
-    uint8_t expected[] = {0x11, 0x22, 0, 0x33};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 6);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
-  }
-  {
-    // wiki example 5
-    uint8_t buf[] = {5, 0x11, 0x22, 0x33, 0x44, 0};
-    uint8_t expected[] = {0x11, 0x22, 0x33, 0x44};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 6);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
-  }
-  {
-    // wiki example 6
-    uint8_t buf[] = {2, 0x11, 1, 1, 1, 0};
-    uint8_t expected[] = {0x11, 0, 0, 0};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 6);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
-  }
-  {
-    // wiki example 6
-    uint8_t buf[] = {2, 0x11, 1, 1, 1, 0};
-    uint8_t expected[] = {0x11, 0, 0, 0};
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 6);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
-  }
-  {
-    // wiki example 7
-    uint32_t size = 270;
-    uint8_t encoded[size];
-    example_7_encoded(encoded);
-    uint8_t unencoded[size];
-    example_7_unencoded(unencoded);
-    struct cobs cobs;
-    cobs_init(&cobs, encoded, size);
-    cobs_decode_in_place(&cobs);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, 254);
+    cobs_init(&cobs, encoded, encoded_length);
+    uint32_t decoded_length;
+    cobs_decode_in_place(&cobs, &decoded_length);
+    TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, decoded_length);
   }
 }
 

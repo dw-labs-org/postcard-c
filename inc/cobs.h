@@ -36,10 +36,10 @@ void cobs_write_bytes(struct cobs *cobs, uint8_t *bytes, uint32_t size);
 void cobs_start_frame_decode(struct cobs *cobs);
 void cobs_end_frame_decode(struct cobs *cobs);
 
-// Decode the cobs frame into a buffer
-void cobs_decode(struct cobs *cobs, uint8_t *buf);
+// Decode the cobs frame into a buffer. Write number of bytes to length
+void cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t *length);
 // Decode the cobs frame in place
-void cobs_decode_in_place(struct cobs *cobs);
+void cobs_decode_in_place(struct cobs *cobs, uint32_t *length);
 
 // Read a cobs encoded byte from the buffer, write it to value
 void cobs_read_byte(struct cobs *cobs, uint8_t *value);
