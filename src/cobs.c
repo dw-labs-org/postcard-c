@@ -25,6 +25,13 @@ void cobs_start_frame_encode(struct cobs *cobs) {
 }
 void cobs_end_frame_encode(struct cobs *cobs) { cobs_insert_zero(cobs); }
 
+void cobs_encode(struct cobs *cobs, uint8_t *buf, uint32_t size,
+                 uint32_t *written) {
+  cobs_start_frame_encode(cobs);
+  cobs_write_bytes(cobs, buf, size);
+  cobs_end_frame_encode(cobs);
+  *written = cobs->next - cobs->buf;
+}
 void cobs_write_byte(struct cobs *cobs, uint8_t byte) {
   // if been no 0 for 255 bytes, insert byte and reset counter
   if (cobs->zero == 255) {

@@ -27,6 +27,11 @@ void cobs_start_frame_encode(struct cobs *cobs);
 // Insert the final 0, buffer is in sendable state
 void cobs_end_frame_encode(struct cobs *cobs);
 
+// encodes size number of bytes in buf into cobs buf, written is number of bytes
+// in cobs buf (including trailing 0)
+void cobs_encode(struct cobs *cobs, uint8_t *buf, uint32_t size,
+                 uint32_t *written);
+
 // Write a byte to the buffer in cobs struct
 void cobs_write_byte(struct cobs *cobs, uint8_t byte);
 // Write a byte array to the buffer in the cobs struct

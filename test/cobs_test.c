@@ -62,6 +62,14 @@ uint32_t example_7_encoded(uint8_t *buf) {
   return 256;
 }
 
+uint32_t example_8_encoded(uint8_t *buf) {
+  buf[0] = 0x1;
+  buf[1] = 0xFF;
+  uint32_t n = write_seq(buf + 2, 0x01, 0xFE);
+  buf[n + 2] = 0;
+  return n + 3;
+}
+
 uint32_t example_1_unencoded(uint8_t *buf) {
   uint8_t data[] = {0};
   memcpy(buf, data, 1);
@@ -98,10 +106,12 @@ uint32_t example_6_unencoded(uint8_t *buf) {
 }
 
 uint32_t example_7_unencoded(uint8_t *buf) {
-  write_seq(buf, 0x01, 0xFE);
-  return 254;
+  return write_seq(buf, 0x01, 0xFE);
 }
 
+uint32_t example_8_unencoded(uint8_t *buf) {
+  return write_seq(buf, 0x00, 0xFE);
+}
 // Picks the example, writes to buf, returns the number of bytes written
 uint32_t example_unencoded(uint8_t example, uint8_t *buf) {
   switch (example) {
@@ -125,6 +135,9 @@ uint32_t example_unencoded(uint8_t example, uint8_t *buf) {
       break;
     case 7:
       return example_7_unencoded(buf);
+      break;
+    case 8:
+      return example_8_unencoded(buf);
       break;
 
     default:
@@ -156,6 +169,9 @@ uint32_t example_encoded(uint8_t example, uint8_t *buf) {
     case 7:
       return example_7_encoded(buf);
       break;
+    case 8:
+      return example_8_encoded(buf);
+      break;
 
     default:
       return 0;
@@ -163,86 +179,26 @@ uint32_t example_encoded(uint8_t example, uint8_t *buf) {
 }
 
 void wikipedia_examples_encode(void) {
-  // init buffer and cobs struct
-  uint8_t buf[8];
-  struct cobs cobs;
-  cobs_init(&cobs, buf, 8);
-  // wiki example 1
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[2]);
-  cobs_reset(&cobs);
-  // wiki example 2
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0);
-  cobs_write_byte(&cobs, 0);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[2]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[3]);
-  cobs_reset(&cobs);
-  // wiki example 3
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0);
-  cobs_write_byte(&cobs, 0x11);
-  cobs_write_byte(&cobs, 0);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(2, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(0x11, buf[2]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[3]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[4]);
-  cobs_reset(&cobs);
-  // wiki example 4
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0x11);
-  cobs_write_byte(&cobs, 0x22);
-  cobs_write_byte(&cobs, 0);
-  cobs_write_byte(&cobs, 0x33);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(3, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(0x22, buf[2]);
-  TEST_ASSERT_EQUAL_UINT8(2, buf[3]);
-  TEST_ASSERT_EQUAL_UINT8(0x33, buf[4]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[5]);
-  cobs_reset(&cobs);
-  // wiki example 5
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0x11);
-  cobs_write_byte(&cobs, 0x22);
-  cobs_write_byte(&cobs, 0x33);
-  cobs_write_byte(&cobs, 0x44);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(5, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(0x22, buf[2]);
-  TEST_ASSERT_EQUAL_UINT8(0x33, buf[3]);
-  TEST_ASSERT_EQUAL_UINT8(0x44, buf[4]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[5]);
-  cobs_reset(&cobs);
-  // wiki example 6
-  cobs_start_frame_encode(&cobs);
-  cobs_write_byte(&cobs, 0x11);
-  cobs_write_byte(&cobs, 0);
-  cobs_write_byte(&cobs, 0);
-  cobs_write_byte(&cobs, 0);
-  cobs_end_frame_encode(&cobs);
-  TEST_ASSERT_EQUAL_UINT8(2, buf[0]);
-  TEST_ASSERT_EQUAL_UINT8(0x11, buf[1]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[2]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[3]);
-  TEST_ASSERT_EQUAL_UINT8(1, buf[4]);
-  TEST_ASSERT_EQUAL_UINT8(0, buf[5]);
-  cobs_reset(&cobs);
+  for (uint8_t example = 1; example <= 8; example++) {
+    uint8_t unencoded[300];
+    uint8_t encoded[300];
+    uint8_t buf[300];
+    uint32_t encoded_length_expected = example_encoded(example, encoded);
+    uint32_t decoded_length = example_unencoded(example, unencoded);
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 300);
+
+    uint32_t encoded_length;
+    cobs_encode(&cobs, unencoded, decoded_length, &encoded_length);
+
+    TEST_ASSERT_EQUAL_UINT32(encoded_length_expected, encoded_length);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(encoded, buf, encoded_length);
+  }
+  return;
 }
 
 void wikipedia_examples_decode(void) {
-  for (uint8_t example = 1; example <= 7; example++) {
+  for (uint8_t example = 1; example <= 8; example++) {
     uint8_t unencoded[300];
     uint8_t encoded[300];
     uint32_t encoded_length = example_encoded(example, encoded);
