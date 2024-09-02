@@ -1,7 +1,7 @@
 #ifndef _COBS_H
 #define _COBS_H
+#include "stdbool.h"
 #include "stdint.h"
-
 // struct that contains buffer and info for writing cobs encoded bytes
 struct cobs {
   // Buffer being written in to
@@ -13,6 +13,8 @@ struct cobs {
   // Number of bytes since previous zero for encoding,
   // or bytes to next zero for decoding
   uint8_t zero;
+  // next zero is an overhead byte. decode only
+  bool overhead;
 };
 
 // initialise the cobs struct
@@ -34,6 +36,8 @@ void cobs_write_bytes(struct cobs *cobs, uint8_t *bytes, uint32_t size);
 void cobs_start_frame_decode(struct cobs *cobs);
 void cobs_end_frame_decode(struct cobs *cobs);
 
+// Decode the cobs frame into a buffer
+void cobs_decode(struct cobs *cobs, uint8_t *buf);
 // Decode the cobs frame in place
 void cobs_decode_in_place(struct cobs *cobs);
 
