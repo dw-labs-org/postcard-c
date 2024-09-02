@@ -307,6 +307,33 @@ void decode_overread(void) {
   uint32_t written;
   TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_BUFFER_END,
                     cobs_decode(&cobs, unencoded, 300, &written));
+  TEST_ASSERT_EQUAL(encoded_length - 50, cobs.next - cobs.buf);
+}
+
+void decode_overflow(void) {
+  uint8_t unencoded[300];
+  uint8_t encoded[300];
+  uint32_t encoded_length = example_encoded(8, encoded);
+  struct cobs cobs;
+  cobs_init(&cobs, encoded, encoded_length);
+
+  uint32_t written;
+  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_OVERFLOW,
+                    cobs_decode(&cobs, unencoded, 200, &written));
+  TEST_ASSERT_EQUAL(200, written);
+}
+
+void decode_invalid_zero(void) {
+  uint8_t unencoded[300];
+  uint8_t encoded[300];
+  uint32_t encoded_length = example_encoded(4, encoded);
+  struct cobs cobs;
+  cobs_init(&cobs, encoded, encoded_length);
+  encoded[4] = 0;
+  uint32_t written;
+  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_INVALID_ZERO,
+                    cobs_decode(&cobs, unencoded, 300, &written));
+  TEST_ASSERT_EQUAL(3, written);
 }
 
 // not needed when using generate_test_runner.rb
@@ -316,5 +343,7 @@ int main(void) {
   RUN_TEST(wikipedia_examples_decode);
   RUN_TEST(encode_overflow);
   RUN_TEST(decode_overread);
+  RUN_TEST(decode_overflow);
+  RUN_TEST(decode_invalid_zero);
   return UNITY_END();
 }

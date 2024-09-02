@@ -100,7 +100,7 @@ postcard_return_t cobs_decode_end_frame(struct cobs *cobs) {
   if (cobs->zero == 0) {
     return POSTCARD_SUCCESS;
   } else {
-    return POSTCARD_COBS_INVALID_ZERO;
+    return POSTCARD_COBS_DECODE_INVALID_ZERO;
   }
 }
 
@@ -149,6 +149,7 @@ postcard_return_t cobs_read_bytes(struct cobs *cobs, uint8_t *buf,
 postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
                               uint32_t *written) {
   uint8_t *buf_ptr = buf;
+  uint8_t *end = buf + size;
   cobs_decode_start_frame(cobs);
   while (true) {
     postcard_return_t result = cobs_read_byte(cobs, buf_ptr++);
@@ -159,6 +160,9 @@ postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
       } else if (result == POSTCARD_COBS_DECODE_BUFFER_END) {
         return POSTCARD_COBS_DECODE_BUFFER_END;
       }
+    } else if (buf_ptr >= end) {
+      *written = buf_ptr - buf;
+      return POSTCARD_COBS_DECODE_OVERFLOW;
     }
   }
 }
