@@ -9,7 +9,7 @@ void tearDown(void) {
   // clean stuff up here
 }
 
-void wikipedia_examples(void) {
+void wikipedia_examples_encode(void) {
   // init buffer and cobs struct
   uint8_t buf[8];
   struct cobs cobs;
@@ -88,9 +88,68 @@ void wikipedia_examples(void) {
   cobs_reset(&cobs);
 }
 
+void wikipedia_examples_decode(void) {
+  {
+    // wiki example 1
+    uint8_t buf[] = {1, 1, 0};
+    uint8_t expected[] = {0};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 3);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 1);
+  }
+
+  {
+    // wiki example 2
+    uint8_t buf[] = {1, 1, 1, 0};
+    uint8_t expected[] = {0, 0};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 4);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 2);
+  }
+
+  {
+    // wiki example 3
+    uint8_t buf[] = {1, 2, 0x11, 1, 0};
+    uint8_t expected[] = {0, 0x11, 0};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 5);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 3);
+  }
+  {
+    // wiki example 4
+    uint8_t buf[] = {3, 0x11, 0x22, 0x2, 0x33, 0};
+    uint8_t expected[] = {0x11, 0x22, 0, 0x33};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 6);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
+  }
+  {
+    // wiki example 5
+    uint8_t buf[] = {5, 0x11, 0x22, 0x33, 0x44, 0};
+    uint8_t expected[] = {0x11, 0x22, 0x33, 0x44};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 6);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
+  }
+  {
+    // wiki example 6
+    uint8_t buf[] = {2, 0x11, 1, 1, 1, 0};
+    uint8_t expected[] = {0x11, 0, 0, 0};
+    struct cobs cobs;
+    cobs_init(&cobs, buf, 6);
+    cobs_decode_in_place(&cobs);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(expected, buf, 4);
+  }
+}
 // not needed when using generate_test_runner.rb
 int main(void) {
   UNITY_BEGIN();
-  RUN_TEST(wikipedia_examples);
+  RUN_TEST(wikipedia_examples_encode);
+  RUN_TEST(wikipedia_examples_decode);
   return UNITY_END();
 }

@@ -56,3 +56,31 @@ void cobs_insert_zero(struct cobs *cobs) {
   cobs->next++;
   cobs->zero = 1;
 }
+
+void cobs_start_frame_decode(struct cobs *cobs) {
+  // First byte marks position of next zero
+  cobs->zero = *(cobs->buf);
+  cobs->next = cobs->buf + 1;
+}
+
+void cobs_end_frame_decode(struct cobs *cobs) {}
+
+void cobs_read_byte(struct cobs *cobs, uint8_t *value) {
+  // decrement next zero counter
+  cobs->zero--;
+  if (cobs->zero == 0) {
+    // This byte is a marker
+    cobs->zero = *(cobs->next);
+    *value = 0;
+  } else {
+    *value = *(cobs->next);
+  }
+  cobs->next++;
+}
+
+void cobs_decode_in_place(struct cobs *cobs) {
+  cobs_start_frame_decode(cobs);
+  while (*cobs->next != 0) {
+    cobs_read_byte(cobs, cobs->next - 1);
+  }
+}
