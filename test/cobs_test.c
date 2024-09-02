@@ -254,7 +254,9 @@ void wikipedia_examples_encode(void) {
     cobs_init(&cobs, buf, 300);
 
     uint32_t encoded_length;
-    cobs_encode(&cobs, unencoded, decoded_length, &encoded_length);
+    TEST_ASSERT_EQUAL(
+        POSTCARD_SUCCESS,
+        cobs_encode(&cobs, unencoded, decoded_length, &encoded_length));
 
     TEST_ASSERT_EQUAL_UINT32(encoded_length_expected, encoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(encoded, buf, encoded_length);
@@ -271,7 +273,8 @@ void wikipedia_examples_decode(void) {
     struct cobs cobs;
     cobs_init(&cobs, encoded, encoded_length);
     uint32_t decoded_length;
-    cobs_decode_in_place(&cobs, &decoded_length);
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_decode_in_place(&cobs, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, decoded_length);
   }

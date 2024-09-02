@@ -22,7 +22,7 @@ impl<const N: usize> Cobs<N> {
         let mut buf = Box::new([0u8; N]);
         let mut cobs = MaybeUninit::<cobs>::uninit();
         let cobs = unsafe {
-            cobs_init(cobs.as_mut_ptr(), &mut *buf as *mut u8, 256);
+            cobs_init(cobs.as_mut_ptr(), &mut *buf as *mut u8, N as u32);
             cobs.assume_init()
         };
         Self { buf, cobs }
@@ -33,7 +33,9 @@ impl<const N: usize> Cobs<N> {
     }
 
     fn end_frame(&mut self) {
-        unsafe { cobs_end_frame_encode(&mut self.cobs as *mut cobs) }
+        unsafe {
+            cobs_end_frame_encode(&mut self.cobs as *mut cobs);
+        }
     }
 
     fn reset(&mut self) {
