@@ -6,6 +6,8 @@ typedef enum postcard_return {
   POSTCARD_SUCCESS = 0,
   // Returned when cobs byte read finds a 0
   POSTCARD_COBS_EOF,
+  // If first byte in buffer is a 0
+  POSTCARD_COBS_DECODE_LEADING_ZERO,
   // Returned when cobs_decode_end_frame finds an unexpected 0,
   POSTCARD_COBS_DECODE_INVALID_ZERO,
   // Try to read cobs byte beyond the buffer

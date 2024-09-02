@@ -40,7 +40,7 @@ postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size);
 
 // Get the index of the next zero from first byte and setup cobs for decode
-void cobs_decode_start_frame(struct cobs *cobs);
+postcard_return_t cobs_decode_start_frame(struct cobs *cobs);
 // Checks that the end of the frame is valid (last marker points to framing 0)
 postcard_return_t cobs_decode_end_frame(struct cobs *cobs);
 

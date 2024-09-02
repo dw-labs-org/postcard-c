@@ -88,11 +88,16 @@ postcard_return_t cobs_insert_zero(struct cobs *cobs) {
   return POSTCARD_SUCCESS;
 }
 
-void cobs_decode_start_frame(struct cobs *cobs) {
+postcard_return_t cobs_decode_start_frame(struct cobs *cobs) {
+  uint8_t byte = *(cobs->buf);
+  if (byte == 0) {
+    return POSTCARD_COBS_DECODE_LEADING_ZERO;
+  }
   // First byte marks position of next zero
-  cobs->zero = *(cobs->buf);
+  cobs->zero = byte;
   cobs->next = cobs->buf + 1;
   cobs->overhead = cobs->zero == 0xFF;
+  return POSTCARD_SUCCESS;
 }
 
 // Checks that end of frame zero is as expected
@@ -150,7 +155,10 @@ postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
                               uint32_t *written) {
   uint8_t *buf_ptr = buf;
   uint8_t *end = buf + size;
-  cobs_decode_start_frame(cobs);
+  if (cobs_decode_start_frame(cobs) == POSTCARD_COBS_DECODE_LEADING_ZERO) {
+    *written = 0;
+    return POSTCARD_COBS_DECODE_LEADING_ZERO;
+  }
   while (true) {
     postcard_return_t result = cobs_read_byte(cobs, buf_ptr++);
     if (result != POSTCARD_SUCCESS) {
