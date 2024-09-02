@@ -5,16 +5,9 @@ A serialisation library for the [postcard](https://crates.io/crates/postcard/1.0
 The library supports the following serde data types:
 ### Serialising
 - bool
-- i8
-- u8
-- i16
-- u16
-- i32
-- u32
-- i64
-- u64
-- f32
-- f64
+- i8, i16, i32, i64
+- u8, u16, u32, u64
+- f32, f64
 - byte array
 - unit_variant
 
