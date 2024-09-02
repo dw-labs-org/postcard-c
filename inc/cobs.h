@@ -18,20 +18,20 @@ struct cobs {
   bool overhead;
 };
 
-// initialise the cobs struct
+// initialise the cobs struct for either encoding or decoding
 void cobs_init(struct cobs *cobs, uint8_t *buf, uint32_t size);
 // Reset for next frame
 void cobs_reset(struct cobs *cobs);
 
 // insert framing and first marker 0
-void cobs_start_frame_encode(struct cobs *cobs);
-// Insert the final 0, buffer is in sendable state
-postcard_return_t cobs_end_frame_encode(struct cobs *cobs);
+void cobs_encode_start_frame(struct cobs *cobs);
+// Insert the final 0, buffer is in sendable state if returns POSTCARD_SUCCESS
+postcard_return_t cobs_encode_end_frame(struct cobs *cobs);
 
 // encodes size number of bytes in buf into cobs buf, written is number of bytes
 // in cobs buf (including trailing 0)
-postcard_return_t cobs_encode(struct cobs *cobs, uint8_t *buf, uint32_t size,
-                              uint32_t *written);
+postcard_return_t cobs_encode_frame(struct cobs *cobs, uint8_t *buf,
+                                    uint32_t size, uint32_t *written);
 
 // Write a byte to the buffer in cobs struct
 postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte);
@@ -40,14 +40,19 @@ postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size);
 
 // Get the index of the next zero from first byte and setup cobs for decode
-void cobs_start_frame_decode(struct cobs *cobs);
-postcard_return_t cobs_end_frame_decode(struct cobs *cobs);
+void cobs_decode_start_frame(struct cobs *cobs);
+// Checks that the end of the frame is valid (last marker points to framing 0)
+postcard_return_t cobs_decode_end_frame(struct cobs *cobs);
 
-// Decode the cobs frame into a buffer. Write number of bytes to length
-postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf,
-                              uint32_t *length);
-// Decode the cobs frame in place
-postcard_return_t cobs_decode_in_place(struct cobs *cobs, uint32_t *length);
+// Decode the cobs frame into a buffer. Write number of bytes to written. size
+// is buf size;
+// Will return an error if the frame is invalid, cobs buffer end is reached or
+// buf end is reached.
+postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
+                              uint32_t *written);
+// Decode the cobs frame in place.
+// Will return an error if the frame is invalid or cobs buffer end is reached
+postcard_return_t cobs_decode_in_place(struct cobs *cobs, uint32_t *written);
 
 // Read a cobs encoded byte from the buffer, write it to value
 postcard_return_t cobs_read_byte(struct cobs *cobs, uint8_t *value);

@@ -29,12 +29,12 @@ impl<const N: usize> Cobs<N> {
     }
 
     fn start_frame(&mut self) {
-        unsafe { cobs_start_frame_encode(&mut self.cobs as *mut cobs) }
+        unsafe { cobs_encode_start_frame(&mut self.cobs as *mut cobs) }
     }
 
     fn end_frame(&mut self) {
         unsafe {
-            cobs_end_frame_encode(&mut self.cobs as *mut cobs);
+            cobs_encode_end_frame(&mut self.cobs as *mut cobs);
         }
     }
 
