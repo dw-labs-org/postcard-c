@@ -35,6 +35,11 @@ postcard_return_t cobs_encode_frame(struct cobs *cobs, uint8_t *buf,
 
 // Write a byte to the buffer in cobs struct
 postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte);
+// Write a byte without checking for overflow first.
+// Used in cobs_write_bytes
+void cobs_write_byte_unchecked(struct cobs *cobs, uint8_t byte);
+// Only called when enough space in buffer and guaranteed to be no overhead byte
+void cobs_write_byte_unchecked_no_overhead(struct cobs *cobs, uint8_t byte);
 // Write a byte array to the buffer in the cobs struct
 postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size);

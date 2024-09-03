@@ -293,8 +293,8 @@ void encode_overflow(void) {
   TEST_ASSERT_EQUAL(
       POSTCARD_COBS_ENCODE_OVERFLOW,
       cobs_encode_frame(&cobs, unencoded, decoded_length, &encoded_length));
-
-  TEST_ASSERT_EQUAL_UINT32(200, encoded_length);
+  // Should be 1 as write_bytes shortcircuits overflows after writing initial 0
+  TEST_ASSERT_EQUAL_UINT32(1, encoded_length);
 }
 
 void decode_overread(void) {

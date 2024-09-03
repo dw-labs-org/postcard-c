@@ -1,5 +1,7 @@
 #include "cobs.h"
 
+#include "stdio.h"
+
 // declration
 postcard_return_t cobs_insert_zero(struct cobs *cobs);
 
@@ -66,16 +68,61 @@ postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte) {
   }
 }
 
+void cobs_write_byte_unchecked(struct cobs *cobs, uint8_t byte) {
+  // if been no 0 for 255 bytes, insert byte and reset counter
+  if (cobs->zero == 255) {
+    cobs_insert_zero(cobs);
+  }
+
+  // If byte is zero, insert marker
+  if (byte == 0) {
+    return cobs_insert_zero(cobs);
+  } else {
+    // otherwise insert byte
+    *(cobs->next) = byte;
+    cobs->next++;
+    cobs->zero++;
+  }
+}
+
+void cobs_write_byte_unchecked_no_overhead(struct cobs *cobs, uint8_t byte) {
+  // If byte is zero, insert marker
+  if (byte == 0) {
+    return cobs_insert_zero(cobs);
+  } else {
+    // otherwise insert byte
+    *(cobs->next) = byte;
+    cobs->next++;
+    cobs->zero++;
+  }
+}
+
 // Write an array of bytes to the buffer with cobs encoding
 postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
                                    uint32_t size) {
-  for (uint32_t i = 0; i < size; i++) {
-    postcard_return_t result = cobs_write_byte(cobs, bytes[i]);
-    if (result != POSTCARD_SUCCESS) {
-      return result;
+  // calc max size of encoded bytes
+  // size + 1 for possible overhead byte + 1 for each 256 bytes in data
+  uint32_t max_bytes = size + 1 + (size >> 8);
+  uint32_t space_left = cobs->end - cobs->next;
+  // printf("size: %d, max: %d, left: %d\n", size, max_bytes, space_left);
+  // check if enough space in buffer
+  if (space_left >= max_bytes) {
+    // can used unchecked write
+    if (max_bytes <= (255 - cobs->zero)) {
+      // dont need to insert any overhead bytes
+      for (uint32_t i = 0; i < size; i++) {
+        cobs_write_byte_unchecked_no_overhead(cobs, bytes[i]);
+      }
+      return POSTCARD_SUCCESS;
+    } else {
+      for (uint32_t i = 0; i < size; i++) {
+        cobs_write_byte_unchecked(cobs, bytes[i]);
+      }
+      return POSTCARD_SUCCESS;
     }
+  } else {
+    return POSTCARD_COBS_ENCODE_OVERFLOW;
   }
-  return POSTCARD_SUCCESS;
 }
 
 postcard_return_t cobs_insert_zero(struct cobs *cobs) {
