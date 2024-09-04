@@ -4,21 +4,6 @@
 #include "stdbool.h"
 #include "stdint.h"
 
-// struct that contains buffer and info for decoding cobs frame
-struct cobs_decoder {
-  // Buffer being written in to or read from
-  uint8_t *buf;
-  // End of buffer
-  uint8_t *end;
-  // Pointer to next byte location
-  uint8_t *next;
-  // Number of bytes since previous zero for encoding,
-  // or bytes to next zero for decoding
-  uint8_t zero;
-  // next zero is an overhead byte. decode only
-  bool overhead;
-};
-
 // struct that contains buffer and info for writing cobs encoded bytes
 struct cobs_encoder {
   // Buffer being written in to
@@ -29,6 +14,30 @@ struct cobs_encoder {
   uint8_t *next;
   // Number of bytes since previous zero for encoding,
   uint8_t zero;
+};
+
+// struct that contains buffer and info for decoding cobs frame
+struct cobs_decoder {
+  // Buffer being written in to or read from
+  uint8_t *buf;
+  // End of buffer
+  uint8_t *end;
+  // Pointer to next byte location for decoding
+  uint8_t *next;
+  // Pointer to last valid byte in buffer + 1
+  // if data_start == data_end then buffer is empty
+  uint8_t *data_end;
+  // Pointer to start of the decoded (or partially decoded) frame
+  uint8_t *frame_start;
+  // Pointer to end of the decoded (or partially decoded) frame
+  uint8_t *frame_end;
+  // Number of bytes since previous zero for encoding,
+  // or bytes to next zero for decoding
+  uint8_t zero;
+  // next zero is an overhead byte. decode only
+  bool overhead;
+  // true if buffer is full
+  bool full;
 };
 
 // ========================= Encoder ====================================
@@ -60,10 +69,16 @@ postcard_return_t cobs_encoder_write_bytes(struct cobs_encoder *cobs_encoder,
                                            uint8_t *bytes, uint32_t size);
 
 // ========================== Decoder ===================================
-void cobs_decoder_init(struct cobs_decoder *cobs_decoder, uint8_t *buf,
-                       uint32_t size);
+// data_size is size of data already in buf to be decoded
+postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
+                                    uint8_t *buf, uint32_t size,
+                                    uint32_t data_size);
 // Reset for next frame
 void cobs_decoder_reset(struct cobs_decoder *cobs_decoder);
+
+// Inform the encoder about data written to the buffer
+postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
+                                            uint32_t size);
 
 // Get the index of the next zero from first byte and setup cobs_decoder for
 // decode
@@ -89,5 +104,9 @@ postcard_return_t cobs_decoder_read_byte(struct cobs_decoder *cobs_decoder,
 // Read cobs_decoder encoded bytes from the cobs_decoder buffer, write it to buf
 postcard_return_t cobs_decoder_read_bytes(struct cobs_decoder *cobs_decoder,
                                           uint8_t *buf, uint32_t size);
+
+// Place up to size bytes from buf into the decoding circular buffer
+uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
+                                  uint8_t *buf, uint32_t size);
 
 #endif
