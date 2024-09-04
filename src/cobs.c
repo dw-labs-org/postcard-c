@@ -2,121 +2,127 @@
 
 #include "stdio.h"
 
-// declration
-postcard_return_t cobs_insert_zero(struct cobs *cobs);
+// declaration
+postcard_return_t cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder);
 
+// ============================= Encoder ================================
 // assign buffer and length
-void cobs_init(struct cobs *cobs, uint8_t *buf, uint32_t length) {
-  cobs->buf = buf;
-  cobs->next = buf;
-  cobs->end = buf + length;
-  cobs->zero = 0;
-  cobs->overhead = false;
+void cobs_encoder_init(struct cobs_encoder *cobs_encoder, uint8_t *buf,
+                       uint32_t size) {
+  cobs_encoder->buf = buf;
+  cobs_encoder->next = buf;
+  cobs_encoder->end = buf + size;
+  cobs_encoder->zero = 0;
 }
 
-void cobs_reset(struct cobs *cobs) {
-  cobs->next = cobs->buf;
-  cobs->zero = 0;
+void cobs_encoder_reset(struct cobs_encoder *cobs_encoder) {
+  cobs_encoder->next = cobs_encoder->buf;
+  cobs_encoder->zero = 0;
 }
 
 // Inserts the framing 0 and the first marker byte
-void cobs_encode_start_frame(struct cobs *cobs) {
+void cobs_encoder_start_frame(struct cobs_encoder *cobs_encoder) {
   // marker zero
-  *(cobs->next) = 0;
-  cobs->next++;
-  cobs->zero = 1;
-}
-postcard_return_t cobs_encode_end_frame(struct cobs *cobs) {
-  return cobs_insert_zero(cobs);
+  *(cobs_encoder->next) = 0;
+  cobs_encoder->next++;
+  cobs_encoder->zero = 1;
 }
 
-postcard_return_t cobs_encode_frame(struct cobs *cobs, uint8_t *buf,
-                                    uint32_t size, uint32_t *written) {
-  cobs_encode_start_frame(cobs);
-  postcard_return_t result = cobs_write_bytes(cobs, buf, size);
+postcard_return_t cobs_encoder_end_frame(struct cobs_encoder *cobs_encoder) {
+  return cobs_encoder_insert_zero(cobs_encoder);
+}
+
+postcard_return_t cobs_encoder_frame(struct cobs_encoder *cobs_encoder,
+                                     uint8_t *buf, uint32_t size,
+                                     uint32_t *written) {
+  cobs_encoder_start_frame(cobs_encoder);
+  postcard_return_t result = cobs_encoder_write_bytes(cobs_encoder, buf, size);
   if (result != POSTCARD_SUCCESS) {
-    *written = cobs->next - cobs->buf;
+    *written = cobs_encoder->next - cobs_encoder->buf;
     return result;
   }
-  result = cobs_encode_end_frame(cobs);
-  *written = cobs->next - cobs->buf;
+  result = cobs_encoder_end_frame(cobs_encoder);
+  *written = cobs_encoder->next - cobs_encoder->buf;
   return result;
 }
 
-postcard_return_t cobs_write_byte(struct cobs *cobs, uint8_t byte) {
+postcard_return_t cobs_encoder_write_byte(struct cobs_encoder *cobs_encoder,
+                                          uint8_t byte) {
   // check for buffer overflow
-  if (cobs->next >= cobs->end) {
+  if (cobs_encoder->next >= cobs_encoder->end) {
     return POSTCARD_COBS_ENCODE_OVERFLOW;
   }
   // if been no 0 for 255 bytes, insert byte and reset counter
-  if (cobs->zero == 255) {
-    cobs_insert_zero(cobs);
-    if (cobs->next >= cobs->end) {
+  if (cobs_encoder->zero == 255) {
+    cobs_encoder_insert_zero(cobs_encoder);
+    if (cobs_encoder->next >= cobs_encoder->end) {
       return POSTCARD_COBS_ENCODE_OVERFLOW;
     }
   }
 
   // If byte is zero, insert marker
   if (byte == 0) {
-    return cobs_insert_zero(cobs);
+    return cobs_encoder_insert_zero(cobs_encoder);
   } else {
     // otherwise insert byte
-    *(cobs->next) = byte;
-    cobs->next++;
-    cobs->zero++;
+    *(cobs_encoder->next) = byte;
+    cobs_encoder->next++;
+    cobs_encoder->zero++;
     return POSTCARD_SUCCESS;
   }
 }
 
-void cobs_write_byte_unchecked(struct cobs *cobs, uint8_t byte) {
+void cobs_encoder_write_byte_unchecked(struct cobs_encoder *cobs_encoder,
+                                       uint8_t byte) {
   // if been no 0 for 255 bytes, insert byte and reset counter
-  if (cobs->zero == 255) {
-    cobs_insert_zero(cobs);
+  if (cobs_encoder->zero == 255) {
+    cobs_encoder_insert_zero(cobs_encoder);
   }
 
   // If byte is zero, insert marker
   if (byte == 0) {
-    return cobs_insert_zero(cobs);
+    return cobs_encoder_insert_zero(cobs_encoder);
   } else {
     // otherwise insert byte
-    *(cobs->next) = byte;
-    cobs->next++;
-    cobs->zero++;
+    *(cobs_encoder->next) = byte;
+    cobs_encoder->next++;
+    cobs_encoder->zero++;
   }
 }
 
-void cobs_write_byte_unchecked_no_overhead(struct cobs *cobs, uint8_t byte) {
+void cobs_encoder_write_byte_unchecked_no_overhead(
+    struct cobs_encoder *cobs_encoder, uint8_t byte) {
   // If byte is zero, insert marker
   if (byte == 0) {
-    return cobs_insert_zero(cobs);
+    return cobs_encoder_insert_zero(cobs_encoder);
   } else {
     // otherwise insert byte
-    *(cobs->next) = byte;
-    cobs->next++;
-    cobs->zero++;
+    *(cobs_encoder->next) = byte;
+    cobs_encoder->next++;
+    cobs_encoder->zero++;
   }
 }
 
 // Write an array of bytes to the buffer with cobs encoding
-postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
-                                   uint32_t size) {
+postcard_return_t cobs_encoder_write_bytes(struct cobs_encoder *cobs_encoder,
+                                           uint8_t *bytes, uint32_t size) {
   // calc max size of encoded bytes
   // size + 1 for possible overhead byte + 1 for each 256 bytes in data
   uint32_t max_bytes = size + 1 + (size >> 8);
-  uint32_t space_left = cobs->end - cobs->next;
+  uint32_t space_left = cobs_encoder->end - cobs_encoder->next;
   // printf("size: %d, max: %d, left: %d\n", size, max_bytes, space_left);
   // check if enough space in buffer
   if (space_left >= max_bytes) {
     // can used unchecked write
-    if (max_bytes <= (255 - cobs->zero)) {
+    if (max_bytes <= (255 - cobs_encoder->zero)) {
       // dont need to insert any overhead bytes
       for (uint32_t i = 0; i < size; i++) {
-        cobs_write_byte_unchecked_no_overhead(cobs, bytes[i]);
+        cobs_encoder_write_byte_unchecked_no_overhead(cobs_encoder, bytes[i]);
       }
       return POSTCARD_SUCCESS;
     } else {
       for (uint32_t i = 0; i < size; i++) {
-        cobs_write_byte_unchecked(cobs, bytes[i]);
+        cobs_encoder_write_byte_unchecked(cobs_encoder, bytes[i]);
       }
       return POSTCARD_SUCCESS;
     }
@@ -125,72 +131,89 @@ postcard_return_t cobs_write_bytes(struct cobs *cobs, uint8_t *bytes,
   }
 }
 
-postcard_return_t cobs_insert_zero(struct cobs *cobs) {
+postcard_return_t cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder) {
   // Go back and set marker
-  *(cobs->next - cobs->zero) = cobs->zero;
+  *(cobs_encoder->next - cobs_encoder->zero) = cobs_encoder->zero;
   // Add a byte
-  *(cobs->next) = 0;
-  cobs->next++;
-  cobs->zero = 1;
+  *(cobs_encoder->next) = 0;
+  cobs_encoder->next++;
+  cobs_encoder->zero = 1;
   return POSTCARD_SUCCESS;
 }
 
-postcard_return_t cobs_decode_start_frame(struct cobs *cobs) {
-  uint8_t byte = *(cobs->buf);
+// ============================== Decoder ===============================
+// assign buffer and length
+void cobs_decoder_init(struct cobs_decoder *cobs_decoder, uint8_t *buf,
+                       uint32_t size) {
+  cobs_decoder->buf = buf;
+  cobs_decoder->next = buf;
+  cobs_decoder->end = buf + size;
+  cobs_decoder->zero = 0;
+  cobs_decoder->overhead = false;
+}
+
+void cobs_decoder_reset(struct cobs_decoder *cobs_decoder) {
+  cobs_decoder->next = cobs_decoder->buf;
+  cobs_decoder->zero = 0;
+}
+
+postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
+  uint8_t byte = *(cobs_decoder->buf);
   if (byte == 0) {
     return POSTCARD_COBS_DECODE_LEADING_ZERO;
   }
   // First byte marks position of next zero
-  cobs->zero = byte;
-  cobs->next = cobs->buf + 1;
-  cobs->overhead = cobs->zero == 0xFF;
+  cobs_decoder->zero = byte;
+  cobs_decoder->next = cobs_decoder->buf + 1;
+  cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
   return POSTCARD_SUCCESS;
 }
 
 // Checks that end of frame zero is as expected
-postcard_return_t cobs_decode_end_frame(struct cobs *cobs) {
-  if (cobs->zero == 0) {
+postcard_return_t cobs_decoder_end_frame(struct cobs_decoder *cobs_decoder) {
+  if (cobs_decoder->zero == 0) {
     return POSTCARD_SUCCESS;
   } else {
     return POSTCARD_COBS_DECODE_INVALID_ZERO;
   }
 }
 
-postcard_return_t cobs_read_byte(struct cobs *cobs, uint8_t *value) {
+postcard_return_t cobs_decoder_read_byte(struct cobs_decoder *cobs_decoder,
+                                         uint8_t *value) {
   // check if exceeded buffer bounds
-  if (cobs->next >= cobs->end) {
+  if (cobs_decoder->next >= cobs_decoder->end) {
     return POSTCARD_COBS_DECODE_BUFFER_END;
   }
   // decrement next zero counter
-  cobs->zero--;
-  // check if end of cobs frame
-  if (*(cobs->next) == 0) {
+  cobs_decoder->zero--;
+  // check if end of cobs_decoder frame
+  if (*(cobs_decoder->next) == 0) {
     return POSTCARD_COBS_EOF;
   }
 
-  if (cobs->zero == 0) {
+  if (cobs_decoder->zero == 0) {
     // This byte is a marker
-    cobs->zero = *(cobs->next);
+    cobs_decoder->zero = *(cobs_decoder->next);
     // if previous marker was 0xFF, this is an overhead byte
-    if (cobs->overhead) {
-      cobs->overhead = cobs->zero == 0xFF;
-      cobs->next++;
-      return cobs_read_byte(cobs, value);
+    if (cobs_decoder->overhead) {
+      cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
+      cobs_decoder->next++;
+      return cobs_decoder_read_byte(cobs_decoder, value);
     } else {
-      cobs->overhead = cobs->zero == 0xFF;
+      cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
       *value = 0;
     }
   } else {
-    *value = *(cobs->next);
+    *value = *(cobs_decoder->next);
   }
-  cobs->next++;
+  cobs_decoder->next++;
   return POSTCARD_SUCCESS;
 }
 
-postcard_return_t cobs_read_bytes(struct cobs *cobs, uint8_t *buf,
-                                  uint32_t size) {
+postcard_return_t cobs_decoder_read_bytes(struct cobs_decoder *cobs_decoder,
+                                          uint8_t *buf, uint32_t size) {
   for (uint32_t i = 0; i < size; i++) {
-    postcard_return_t result = cobs_read_byte(cobs, buf + i);
+    postcard_return_t result = cobs_decoder_read_byte(cobs_decoder, buf + i);
     if (result != POSTCARD_SUCCESS) {
       return result;
     }
@@ -198,20 +221,22 @@ postcard_return_t cobs_read_bytes(struct cobs *cobs, uint8_t *buf,
   return POSTCARD_SUCCESS;
 }
 
-postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
-                              uint32_t *written) {
+postcard_return_t cobs_decoder_frame(struct cobs_decoder *cobs_decoder,
+                                     uint8_t *buf, uint32_t size,
+                                     uint32_t *written) {
   uint8_t *buf_ptr = buf;
   uint8_t *end = buf + size;
-  if (cobs_decode_start_frame(cobs) == POSTCARD_COBS_DECODE_LEADING_ZERO) {
+  if (cobs_decoder_start_frame(cobs_decoder) ==
+      POSTCARD_COBS_DECODE_LEADING_ZERO) {
     *written = 0;
     return POSTCARD_COBS_DECODE_LEADING_ZERO;
   }
   while (true) {
-    postcard_return_t result = cobs_read_byte(cobs, buf_ptr++);
+    postcard_return_t result = cobs_decoder_read_byte(cobs_decoder, buf_ptr++);
     if (result != POSTCARD_SUCCESS) {
       *written = buf_ptr - buf - 1;
       if (result == POSTCARD_COBS_EOF) {
-        return cobs_decode_end_frame(cobs);
+        return cobs_decoder_end_frame(cobs_decoder);
       } else if (result == POSTCARD_COBS_DECODE_BUFFER_END) {
         return POSTCARD_COBS_DECODE_BUFFER_END;
       }
@@ -222,7 +247,9 @@ postcard_return_t cobs_decode(struct cobs *cobs, uint8_t *buf, uint32_t size,
   }
 }
 
-postcard_return_t cobs_decode_in_place(struct cobs *cobs, uint32_t *written) {
-  uint8_t *buf_ptr = cobs->buf;
-  return cobs_decode(cobs, buf_ptr, cobs->end - cobs->buf, written);
+postcard_return_t cobs_decoder_frame_in_place(struct cobs_decoder *cobs_decoder,
+                                              uint32_t *written) {
+  uint8_t *buf_ptr = cobs_decoder->buf;
+  return cobs_decoder_frame(cobs_decoder, buf_ptr,
+                            cobs_decoder->end - cobs_decoder->buf, written);
 }
