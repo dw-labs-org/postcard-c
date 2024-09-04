@@ -38,6 +38,8 @@ struct cobs_decoder {
   bool overhead;
   // true if buffer is full
   bool full;
+  // true if a successful cobs_decoder_frame_start call has been made
+  bool partial_decode;
 };
 
 // ========================= Encoder ====================================

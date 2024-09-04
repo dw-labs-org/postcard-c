@@ -243,6 +243,22 @@ uint32_t example_encoded(uint8_t example, uint8_t *buf) {
   }
 }
 
+uint32_t example_encoded_all(uint8_t *buf) {
+  uint32_t size = 0;
+  for (uint8_t i = 1; i <= 11; i++) {
+    size += example_encoded(i, buf + size);
+  }
+  return size;
+}
+
+uint32_t example_unencoded_all(uint8_t *buf) {
+  uint32_t size = 0;
+  for (uint8_t i = 1; i <= 11; i++) {
+    size += example_unencoded(i, buf + size);
+  }
+  return size;
+}
+
 void wikipedia_examples_encode(void) {
   for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
@@ -321,6 +337,53 @@ void wikipedia_examples_decode_sequential(void) {
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, buf, decoded_length);
   }
+}
+
+void wikipedia_examples_decode_sequential_partial(void) {
+  uint8_t unencoded[2500];
+  uint8_t encoded[2500];
+  uint8_t dest[2500];
+  uint8_t buf[100];
+  uint32_t encoded_length = example_encoded_all(encoded);
+  uint32_t decoded_length_expected = example_unencoded_all(unencoded);
+
+  struct cobs_decoder cobs_decoder;
+  TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                    cobs_decoder_init(&cobs_decoder, buf, 100, 0));
+  uint8_t *src_ptr = encoded;
+  uint8_t *dest_ptr = dest;
+  uint8_t frames = 0;
+  uint32_t loop_count = 0;
+  char msg[40];
+  while (true) {
+    loop_count++;
+    // try decode
+    uint32_t written = 0;
+    postcard_return_t result =
+        cobs_decoder_frame(&cobs_decoder, dest_ptr, 2500, &written);
+    dest_ptr += written;
+    if (result == POSTCARD_SUCCESS) {
+      // found a frame
+      frames++;
+
+      if (frames == 11) {
+        break;
+      }
+    } else if (result == POSTCARD_COBS_DECODE_DATA_END) {
+      // needs more data for frame
+      uint32_t written = cobs_decoder_place_bytes(&cobs_decoder, src_ptr, 10);
+      if (written == 0) {
+        TEST_ABORT();
+      }
+      src_ptr += written;
+      continue;
+    } else {
+      TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, result);
+    }
+  }
+
+  TEST_ASSERT_EQUAL(11, frames);
+  TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, dest, decoded_length_expected);
 }
 
 void encode_overflow(void) {
@@ -405,6 +468,7 @@ int main(void) {
   RUN_TEST(wikipedia_examples_decode);
   RUN_TEST(wikipedia_examples_decode_in_place);
   RUN_TEST(wikipedia_examples_decode_sequential);
+  RUN_TEST(wikipedia_examples_decode_sequential_partial);
   RUN_TEST(encode_overflow);
   RUN_TEST(decode_overread);
   RUN_TEST(decode_overflow);

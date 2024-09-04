@@ -167,6 +167,7 @@ postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
   cobs_decoder->zero = 0;
   cobs_decoder->overhead = false;
   cobs_decoder->full = false;
+  cobs_decoder->partial_decode = false;
   return cobs_decoder_data_written(cobs_decoder, data_size);
 }
 
@@ -177,6 +178,7 @@ void cobs_decoder_reset(struct cobs_decoder *cobs_decoder) {
   cobs_decoder->frame_start = cobs_decoder->end;
   cobs_decoder->frame_end = cobs_decoder->end;
   cobs_decoder->zero = 0;
+  cobs_decoder->partial_decode = false;
 }
 
 postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
@@ -222,6 +224,7 @@ postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
   // chech if at data end and perform wrap around
   postcard_return_t result = cobs_decoder_check_next(cobs_decoder);
   if (result != POSTCARD_SUCCESS) {
+    // printf("No start frame\n");
     return result;
   }
   uint8_t byte = *(cobs_decoder->next);
@@ -232,11 +235,14 @@ postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
   cobs_decoder->zero = byte;
   cobs_decoder->next++;
   cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
+  cobs_decoder->partial_decode = true;
+  // printf("Frame start\n");
   return POSTCARD_SUCCESS;
 }
 
 // Checks that end of frame zero is as expected
 postcard_return_t cobs_decoder_end_frame(struct cobs_decoder *cobs_decoder) {
+  cobs_decoder->partial_decode = false;
   if (cobs_decoder->zero == 0) {
     cobs_decoder->next++;
     cobs_decoder->zero = 0;
@@ -301,11 +307,13 @@ postcard_return_t cobs_decoder_frame(struct cobs_decoder *cobs_decoder,
   // printf("]\n");
   uint8_t *buf_ptr = buf;
   uint8_t *end = buf + size;
-  postcard_return_t result = cobs_decoder_start_frame(cobs_decoder);
-  if (result == POSTCARD_COBS_DECODE_LEADING_ZERO ||
-      result == POSTCARD_COBS_DECODE_DATA_END) {
-    *written = 0;
-    return result;
+  if (!cobs_decoder->partial_decode) {
+    postcard_return_t result = cobs_decoder_start_frame(cobs_decoder);
+    if (result == POSTCARD_COBS_DECODE_LEADING_ZERO ||
+        result == POSTCARD_COBS_DECODE_DATA_END) {
+      *written = 0;
+      return result;
+    }
   }
   while (true) {
     postcard_return_t result = cobs_decoder_read_byte(cobs_decoder, buf_ptr++);
