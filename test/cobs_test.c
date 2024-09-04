@@ -250,13 +250,13 @@ void wikipedia_examples_encode(void) {
     uint8_t buf[300];
     uint32_t encoded_length_expected = example_encoded(example, encoded);
     uint32_t decoded_length = example_unencoded(example, unencoded);
-    struct cobs cobs;
-    cobs_init(&cobs, buf, 300);
+    struct cobs_encoder cobs_encoder;
+    cobs_encoder_init(&cobs_encoder, buf, 300);
 
     uint32_t encoded_length;
-    TEST_ASSERT_EQUAL(
-        POSTCARD_SUCCESS,
-        cobs_encode_frame(&cobs, unencoded, decoded_length, &encoded_length));
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_encoder_frame(&cobs_encoder, unencoded,
+                                         decoded_length, &encoded_length));
 
     TEST_ASSERT_EQUAL_UINT32(encoded_length_expected, encoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(encoded, buf, encoded_length);
@@ -270,11 +270,11 @@ void wikipedia_examples_decode(void) {
     uint8_t encoded[300];
     uint32_t encoded_length = example_encoded(example, encoded);
     uint32_t decoded_length_expected = example_unencoded(example, unencoded);
-    struct cobs cobs;
-    cobs_init(&cobs, encoded, encoded_length);
+    struct cobs_decoder cobs_decoder;
+    cobs_decoder_init(&cobs_decoder, encoded, encoded_length);
     uint32_t decoded_length;
-    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
-                      cobs_decode_in_place(&cobs, &decoded_length));
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place(
+                                            &cobs_decoder, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, decoded_length);
   }
@@ -286,13 +286,13 @@ void encode_overflow(void) {
   uint8_t buf[300];
   example_encoded(7, encoded);
   uint32_t decoded_length = example_unencoded(7, unencoded);
-  struct cobs cobs;
-  cobs_init(&cobs, buf, 200);
+  struct cobs_encoder cobs_encoder;
+  cobs_encoder_init(&cobs_encoder, buf, 200);
 
   uint32_t encoded_length;
-  TEST_ASSERT_EQUAL(
-      POSTCARD_COBS_ENCODE_OVERFLOW,
-      cobs_encode_frame(&cobs, unencoded, decoded_length, &encoded_length));
+  TEST_ASSERT_EQUAL(POSTCARD_COBS_ENCODE_OVERFLOW,
+                    cobs_encoder_frame(&cobs_encoder, unencoded, decoded_length,
+                                       &encoded_length));
   // Should be 1 as write_bytes shortcircuits overflows after writing initial 0
   TEST_ASSERT_EQUAL_UINT32(1, encoded_length);
 }
@@ -301,25 +301,27 @@ void decode_overread(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   uint32_t encoded_length = example_encoded(8, encoded);
-  struct cobs cobs;
-  cobs_init(&cobs, encoded, encoded_length - 50);
+  struct cobs_decoder cobs_decoder;
+  cobs_decoder_init(&cobs_decoder, encoded, encoded_length - 50);
 
   uint32_t written;
-  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_BUFFER_END,
-                    cobs_decode(&cobs, unencoded, 300, &written));
-  TEST_ASSERT_EQUAL(encoded_length - 50, cobs.next - cobs.buf);
+  TEST_ASSERT_EQUAL(
+      POSTCARD_COBS_DECODE_BUFFER_END,
+      cobs_decoder_frame(&cobs_decoder, unencoded, 300, &written));
+  TEST_ASSERT_EQUAL(encoded_length - 50, cobs_decoder.next - cobs_decoder.buf);
 }
 
 void decode_overflow(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   uint32_t encoded_length = example_encoded(8, encoded);
-  struct cobs cobs;
-  cobs_init(&cobs, encoded, encoded_length);
+  struct cobs_decoder cobs_decoder;
+  cobs_decoder_init(&cobs_decoder, encoded, encoded_length);
 
   uint32_t written;
-  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_OVERFLOW,
-                    cobs_decode(&cobs, unencoded, 200, &written));
+  TEST_ASSERT_EQUAL(
+      POSTCARD_COBS_DECODE_OVERFLOW,
+      cobs_decoder_frame(&cobs_decoder, unencoded, 200, &written));
   TEST_ASSERT_EQUAL(200, written);
 }
 
@@ -327,12 +329,13 @@ void decode_invalid_zero(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   uint32_t encoded_length = example_encoded(4, encoded);
-  struct cobs cobs;
-  cobs_init(&cobs, encoded, encoded_length);
+  struct cobs_decoder cobs_decoder;
+  cobs_decoder_init(&cobs_decoder, encoded, encoded_length);
   encoded[4] = 0;
   uint32_t written;
-  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_INVALID_ZERO,
-                    cobs_decode(&cobs, unencoded, 300, &written));
+  TEST_ASSERT_EQUAL(
+      POSTCARD_COBS_DECODE_INVALID_ZERO,
+      cobs_decoder_frame(&cobs_decoder, unencoded, 300, &written));
   TEST_ASSERT_EQUAL(3, written);
 }
 
@@ -340,12 +343,13 @@ void decode_leading_zero(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   uint32_t encoded_length = example_encoded(4, encoded);
-  struct cobs cobs;
-  cobs_init(&cobs, encoded, encoded_length);
+  struct cobs_decoder cobs_decoder;
+  cobs_decoder_init(&cobs_decoder, encoded, encoded_length);
   encoded[0] = 0;
   uint32_t written;
-  TEST_ASSERT_EQUAL(POSTCARD_COBS_DECODE_LEADING_ZERO,
-                    cobs_decode(&cobs, unencoded, 300, &written));
+  TEST_ASSERT_EQUAL(
+      POSTCARD_COBS_DECODE_LEADING_ZERO,
+      cobs_decoder_frame(&cobs_decoder, unencoded, 300, &written));
   TEST_ASSERT_EQUAL(0, written);
 }
 // not needed when using generate_test_runner.rb

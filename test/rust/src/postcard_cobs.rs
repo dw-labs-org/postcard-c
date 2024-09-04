@@ -1,8 +1,9 @@
 use crate::{
-    cobs, postcard_cobs_encode_bool, postcard_cobs_encode_byte_array, postcard_cobs_encode_double,
-    postcard_cobs_encode_float, postcard_cobs_encode_i16, postcard_cobs_encode_i32,
-    postcard_cobs_encode_i64, postcard_cobs_encode_i8, postcard_cobs_encode_u16,
-    postcard_cobs_encode_u32, postcard_cobs_encode_u64, postcard_cobs_encode_u8, Cobs,
+    cobs_encoder, postcard_cobs_encode_bool, postcard_cobs_encode_byte_array,
+    postcard_cobs_encode_double, postcard_cobs_encode_float, postcard_cobs_encode_i16,
+    postcard_cobs_encode_i32, postcard_cobs_encode_i64, postcard_cobs_encode_i8,
+    postcard_cobs_encode_u16, postcard_cobs_encode_u32, postcard_cobs_encode_u64,
+    postcard_cobs_encode_u8, Cobs,
 };
 
 struct PostcardCobs<const N: usize> {
@@ -26,60 +27,60 @@ impl<const N: usize> PostcardCobs<N> {
 
     fn encode_bool(&mut self, value: bool) {
         unsafe {
-            postcard_cobs_encode_bool(&mut self.cobs.cobs as *mut cobs, value);
+            postcard_cobs_encode_bool(&mut self.cobs.cobs as *mut cobs_encoder, value);
         }
     }
 
     fn encode_u8(&mut self, value: u8) {
         unsafe {
-            postcard_cobs_encode_u8(&mut self.cobs.cobs as *mut cobs, value);
+            postcard_cobs_encode_u8(&mut self.cobs.cobs as *mut cobs_encoder, value);
         }
     }
 
     fn encode_u16(&mut self, value: u16) {
         unsafe {
-            postcard_cobs_encode_u16(&mut self.cobs.cobs as *mut cobs, value);
+            postcard_cobs_encode_u16(&mut self.cobs.cobs as *mut cobs_encoder, value);
         }
     }
 
     fn encode_u32(&mut self, value: u32) {
         unsafe {
-            postcard_cobs_encode_u32(&mut self.cobs.cobs as *mut cobs, value);
+            postcard_cobs_encode_u32(&mut self.cobs.cobs as *mut cobs_encoder, value);
         }
     }
 
     fn encode_u64(&mut self, value: u64) {
         unsafe {
-            postcard_cobs_encode_u64(&mut self.cobs.cobs as *mut cobs, value);
+            postcard_cobs_encode_u64(&mut self.cobs.cobs as *mut cobs_encoder, value);
         }
     }
 
     fn encode_i8(&mut self, value: i8) {
-        unsafe { postcard_cobs_encode_i8(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_i8(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
 
     fn encode_i16(&mut self, value: i16) {
-        unsafe { postcard_cobs_encode_i16(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_i16(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
     fn encode_i32(&mut self, value: i32) {
-        unsafe { postcard_cobs_encode_i32(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_i32(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
     fn encode_i64(&mut self, value: i64) {
-        unsafe { postcard_cobs_encode_i64(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_i64(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
 
     fn encode_float(&mut self, value: f32) {
-        unsafe { postcard_cobs_encode_float(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_float(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
 
     fn encode_double(&mut self, value: f64) {
-        unsafe { postcard_cobs_encode_double(&mut self.cobs.cobs as *mut cobs, value) }
+        unsafe { postcard_cobs_encode_double(&mut self.cobs.cobs as *mut cobs_encoder, value) }
     }
 
     fn encode_byte_array(&mut self, value: &mut [u8]) {
         unsafe {
             postcard_cobs_encode_byte_array(
-                &mut self.cobs.cobs as *mut cobs,
+                &mut self.cobs.cobs as *mut cobs_encoder,
                 value.as_mut_ptr(),
                 value.len() as u32,
             )
