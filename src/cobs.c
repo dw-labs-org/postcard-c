@@ -299,12 +299,6 @@ postcard_return_t cobs_decoder_read_bytes(struct cobs_decoder *cobs_decoder,
 postcard_return_t cobs_decoder_frame(struct cobs_decoder *cobs_decoder,
                                      uint8_t *buf, uint32_t size,
                                      uint32_t *written) {
-  // printf("Decoding:[");
-  // for (uint32_t i = 0; i < cobs_decoder->data_end - cobs_decoder->next; i++)
-  // {
-  //   printf("0x%02X, ", cobs_decoder->next[i]);
-  // }
-  // printf("]\n");
   uint8_t *buf_ptr = buf;
   uint8_t *end = buf + size;
   if (!cobs_decoder->partial_decode) {
@@ -333,9 +327,40 @@ postcard_return_t cobs_decoder_frame(struct cobs_decoder *cobs_decoder,
 
 postcard_return_t cobs_decoder_frame_in_place(struct cobs_decoder *cobs_decoder,
                                               uint32_t *written) {
-  uint8_t *buf_ptr = cobs_decoder->buf;
-  return cobs_decoder_frame(cobs_decoder, buf_ptr,
-                            cobs_decoder->end - cobs_decoder->buf, written);
+  if (!cobs_decoder->partial_decode) {
+    postcard_return_t result = cobs_decoder_start_frame(cobs_decoder);
+    if (result == POSTCARD_COBS_DECODE_LEADING_ZERO ||
+        result == POSTCARD_COBS_DECODE_DATA_END) {
+      return result;
+    } else {
+      // frame decode has started
+      if (cobs_decoder->next != cobs_decoder->end) {
+        cobs_decoder->frame_start = cobs_decoder->next;
+      } else {
+        cobs_decoder->frame_start = cobs_decoder->buf;
+      }
+      cobs_decoder->frame_end = cobs_decoder->frame_start;
+    }
+  }
+  *written = 0;
+  while (true) {
+    if (cobs_decoder->frame_end == cobs_decoder->end) {
+      cobs_decoder->frame_end = cobs_decoder->buf;
+    }
+    postcard_return_t result =
+        cobs_decoder_read_byte(cobs_decoder, cobs_decoder->frame_end++);
+
+    if (result != POSTCARD_SUCCESS) {
+      cobs_decoder->frame_end--;
+      if (result == POSTCARD_COBS_EOF) {
+        return cobs_decoder_end_frame(cobs_decoder);
+      } else {
+        return result;
+      }
+    } else {
+      (*written)++;
+    }
+  }
 }
 
 uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
@@ -362,4 +387,17 @@ uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
     }
   }
   return written;
+}
+
+uint32_t cobs_decoder_fetch_frame(struct cobs_decoder *cobs_decoder,
+                                  uint8_t *buf, uint32_t size) {
+  uint32_t count = 0;
+  while (cobs_decoder->frame_start != cobs_decoder->frame_end) {
+    *(buf++) = *(cobs_decoder->frame_start++);
+    if (cobs_decoder->frame_start == cobs_decoder->end) {
+      cobs_decoder->frame_start = cobs_decoder->buf;
+    }
+    count++;
+  }
+  return count;
 }

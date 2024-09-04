@@ -312,7 +312,7 @@ void wikipedia_examples_decode_in_place(void) {
     TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place(
                                             &cobs_decoder, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
-    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded, decoded_length);
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded + 1, decoded_length);
   }
 }
 
@@ -384,6 +384,32 @@ void wikipedia_examples_decode_sequential_partial(void) {
 
   TEST_ASSERT_EQUAL(11, frames);
   TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, dest, decoded_length_expected);
+}
+
+void wikipedia_examples_decode_in_place_sequential(void) {
+  uint8_t unencoded[300];
+  uint8_t encoded[300];
+  struct cobs_decoder cobs_decoder;
+  TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                    cobs_decoder_init(&cobs_decoder, encoded, 300, 0));
+
+  for (uint8_t example = 1; example <= 11; example++) {
+    uint8_t buf[300];
+    uint32_t encoded_length = example_encoded(example, buf);
+    uint32_t decoded_length_expected = example_unencoded(example, unencoded);
+    uint32_t decoded_length;
+    TEST_ASSERT_EQUAL(encoded_length, cobs_decoder_place_bytes(
+                                          &cobs_decoder, buf, encoded_length));
+
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place(
+                                            &cobs_decoder, &decoded_length));
+    TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
+    uint8_t frame[300];
+    TEST_ASSERT_EQUAL_UINT32(
+        decoded_length_expected,
+        cobs_decoder_fetch_frame(&cobs_decoder, frame, 300));
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, frame, decoded_length);
+  }
 }
 
 void encode_overflow(void) {
@@ -469,6 +495,7 @@ int main(void) {
   RUN_TEST(wikipedia_examples_decode_in_place);
   RUN_TEST(wikipedia_examples_decode_sequential);
   RUN_TEST(wikipedia_examples_decode_sequential_partial);
+  RUN_TEST(wikipedia_examples_decode_in_place_sequential);
   RUN_TEST(encode_overflow);
   RUN_TEST(decode_overread);
   RUN_TEST(decode_overflow);

@@ -111,4 +111,8 @@ postcard_return_t cobs_decoder_read_bytes(struct cobs_decoder *cobs_decoder,
 uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
                                   uint8_t *buf, uint32_t size);
 
+// Pull a frame out of the decoded in place buffer.
+uint32_t cobs_decoder_fetch_frame(struct cobs_decoder *cobs_decoder,
+                                  uint8_t *buf, uint32_t size);
+
 #endif
