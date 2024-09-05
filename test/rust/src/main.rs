@@ -7,6 +7,8 @@ use std::mem::MaybeUninit;
 
 mod postcard_cobs;
 
+mod postcard;
+
 include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
 
 fn main() {}
