@@ -182,6 +182,15 @@ void cobs_decoder_reset(struct cobs_decoder *cobs_decoder) {
   cobs_decoder->partial_decode = false;
 }
 
+bool cobs_decoder_go_to_zero(struct cobs_decoder *cobs_decoder) {
+  while (cobs_decoder->next != cobs_decoder->data_end) {
+    if (*(cobs_decoder->next++) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
 uint32_t cobs_decoder_get_data_ptr(struct cobs_decoder *cobs_decoder,
                                    uint8_t **ptr) {
   *ptr = cobs_decoder->data_end;

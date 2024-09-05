@@ -78,6 +78,9 @@ postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
 // Reset for next frame
 void cobs_decoder_reset(struct cobs_decoder *cobs_decoder);
 
+// find the next zero in the data. next will point to next byte after
+bool cobs_decoder_go_to_zero(struct cobs_decoder *cobs_decoder);
+
 // Get a pointer to the next place to place data bytes and space left
 uint32_t cobs_decoder_get_data_ptr(struct cobs_decoder *cobs_decoder,
                                    uint8_t **ptr);
