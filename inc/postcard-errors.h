@@ -10,11 +10,17 @@ typedef enum postcard_return {
   POSTCARD_COBS_DECODE_LEADING_ZERO,
   // Returned when cobs_decode_end_frame finds an unexpected 0,
   POSTCARD_COBS_DECODE_INVALID_ZERO,
-  // Try to read cobs_decoder byte beyond the buffer
-  POSTCARD_COBS_DECODE_BUFFER_END,
+  // Try to read a byte beyond the data in the buffer
+  POSTCARD_COBS_DECODE_DATA_END,
   // Try to write beyond buffer during decoding
   POSTCARD_COBS_DECODE_OVERFLOW,
   // Try to write beyond cobs_decoder buffer
   POSTCARD_COBS_ENCODE_OVERFLOW,
+  // Written too much data to buffer
+  POSTCARD_COBS_DECODE_WRITTEN_OVERFLOW,
+  // Written data over start of previous or current frame
+  POSTCARD_COBS_DECODE_FRAME_OVERFLOW,
+  // Written data over start of unprocessed data
+  POSTCARD_COBS_DECODE_DATA_OVERFLOW,
 } postcard_return_t;
 #endif
