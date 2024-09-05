@@ -280,7 +280,7 @@ void wikipedia_examples_encode(void) {
   return;
 }
 
-void wikipedia_examples_decode(void) {
+void wikipedia_examples_decode_circular(void) {
   for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
     uint8_t encoded[300];
@@ -292,13 +292,83 @@ void wikipedia_examples_decode(void) {
     uint8_t out[300];
     TEST_ASSERT_EQUAL(
         POSTCARD_SUCCESS,
-        cobs_decoder_frame(&cobs_decoder, out, 300, &decoded_length));
+        cobs_decoder_frame_circular(&cobs_decoder, out, 300, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, out, decoded_length);
   }
 }
 
-void wikipedia_examples_decode_in_place(void) {
+void wikipedia_examples_decode_short(void) {
+  for (uint8_t example = 1; example <= 7; example++) {
+    uint8_t unencoded[300];
+    uint8_t encoded[300];
+    uint32_t encoded_length = example_encoded(example, encoded);
+    uint32_t decoded_length_expected = example_unencoded(example, unencoded);
+    uint8_t buf[256];
+    struct cobs_decoder cobs_decoder;
+    cobs_decoder_init(&cobs_decoder, buf, 256, 0);
+    // write the encoded data to the buffer
+    uint8_t *ptr;
+    TEST_ASSERT_EQUAL(256, cobs_decoder_get_data_ptr(&cobs_decoder, &ptr));
+    memcpy(ptr, encoded, encoded_length);
+    // inform decoder of data written
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_decoder_data_written(&cobs_decoder, encoded_length));
+    // decode the cobs frame
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_decoder_frame_in_place_short(&cobs_decoder));
+
+    // get pointers to decode frame
+    uint8_t *start;
+    uint8_t *end;
+    cobs_decoder_frame_ptrs(&cobs_decoder, &start, &end);
+    // check length
+    TEST_ASSERT_EQUAL(decoded_length_expected, end - start);
+    // check adata
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, start, end - start);
+  }
+}
+
+void wikipedia_examples_decode_short_sequential(void) {
+  uint8_t buf[256];
+  struct cobs_decoder cobs_decoder;
+  cobs_decoder_init(&cobs_decoder, buf, 256, 0);
+
+  for (uint8_t example = 1; example <= 7; example++) {
+    uint8_t unencoded[300];
+    uint8_t encoded[300];
+    uint32_t encoded_length = example_encoded(example, encoded);
+    uint32_t decoded_length_expected = example_unencoded(example, unencoded);
+
+    // write the encoded data to the buffer
+    uint8_t *ptr;
+
+    uint32_t space = cobs_decoder_get_data_ptr(&cobs_decoder, &ptr);
+    if (space < encoded_length) {
+      TEST_ASSERT(cobs_decoder_shift_data(&cobs_decoder) != 0);
+      TEST_ASSERT(cobs_decoder_get_data_ptr(&cobs_decoder, &ptr) >=
+                  encoded_length);
+    }
+    memcpy(ptr, encoded, encoded_length);
+    // inform decoder of data written
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_decoder_data_written(&cobs_decoder, encoded_length));
+    // decode the cobs frame
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                      cobs_decoder_frame_in_place_short(&cobs_decoder));
+
+    // get pointers to decode frame
+    uint8_t *start;
+    uint8_t *end;
+    cobs_decoder_frame_ptrs(&cobs_decoder, &start, &end);
+    // check length
+    TEST_ASSERT_EQUAL(decoded_length_expected, end - start);
+    // check adata
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, start, end - start);
+  }
+}
+
+void wikipedia_examples_decode_in_place_circular(void) {
   for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
     uint8_t encoded[300];
@@ -309,14 +379,14 @@ void wikipedia_examples_decode_in_place(void) {
         POSTCARD_SUCCESS,
         cobs_decoder_init(&cobs_decoder, encoded, 300, encoded_length));
     uint32_t decoded_length;
-    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place(
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place_circular(
                                             &cobs_decoder, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, encoded + 1, decoded_length);
   }
 }
 
-void wikipedia_examples_decode_sequential(void) {
+void wikipedia_examples_decode_sequential_circular(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   struct cobs_decoder cobs_decoder;
@@ -328,23 +398,23 @@ void wikipedia_examples_decode_sequential(void) {
     uint32_t encoded_length = example_encoded(example, buf);
     uint32_t decoded_length_expected = example_unencoded(example, unencoded);
     uint32_t decoded_length;
-    TEST_ASSERT_EQUAL(encoded_length, cobs_decoder_place_bytes(
+    TEST_ASSERT_EQUAL(encoded_length, cobs_decoder_place_bytes_circular(
                                           &cobs_decoder, buf, encoded_length));
 
     TEST_ASSERT_EQUAL(
         POSTCARD_SUCCESS,
-        cobs_decoder_frame(&cobs_decoder, buf, 300, &decoded_length));
+        cobs_decoder_frame_circular(&cobs_decoder, buf, 300, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, buf, decoded_length);
   }
 }
 
-void wikipedia_examples_decode_sequential_partial(void) {
+void wikipedia_examples_decode_sequential_partial_circular(void) {
   uint8_t unencoded[2500];
   uint8_t encoded[2500];
   uint8_t dest[2500];
   uint8_t buf[100];
-  uint32_t encoded_length = example_encoded_all(encoded);
+  example_encoded_all(encoded);
   uint32_t decoded_length_expected = example_unencoded_all(unencoded);
 
   struct cobs_decoder cobs_decoder;
@@ -354,13 +424,13 @@ void wikipedia_examples_decode_sequential_partial(void) {
   uint8_t *dest_ptr = dest;
   uint8_t frames = 0;
   uint32_t loop_count = 0;
-  char msg[40];
+
   while (true) {
     loop_count++;
     // try decode
     uint32_t written = 0;
     postcard_return_t result =
-        cobs_decoder_frame(&cobs_decoder, dest_ptr, 2500, &written);
+        cobs_decoder_frame_circular(&cobs_decoder, dest_ptr, 2500, &written);
     dest_ptr += written;
     if (result == POSTCARD_SUCCESS) {
       // found a frame
@@ -371,7 +441,8 @@ void wikipedia_examples_decode_sequential_partial(void) {
       }
     } else if (result == POSTCARD_COBS_DECODE_DATA_END) {
       // needs more data for frame
-      uint32_t written = cobs_decoder_place_bytes(&cobs_decoder, src_ptr, 10);
+      uint32_t written =
+          cobs_decoder_place_bytes_circular(&cobs_decoder, src_ptr, 10);
       if (written == 0) {
         TEST_ABORT();
       }
@@ -386,7 +457,7 @@ void wikipedia_examples_decode_sequential_partial(void) {
   TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, dest, decoded_length_expected);
 }
 
-void wikipedia_examples_decode_in_place_sequential(void) {
+void wikipedia_examples_decode_in_place_sequential_circular(void) {
   uint8_t unencoded[300];
   uint8_t encoded[300];
   struct cobs_decoder cobs_decoder;
@@ -398,26 +469,26 @@ void wikipedia_examples_decode_in_place_sequential(void) {
     uint32_t encoded_length = example_encoded(example, buf);
     uint32_t decoded_length_expected = example_unencoded(example, unencoded);
     uint32_t decoded_length;
-    TEST_ASSERT_EQUAL(encoded_length, cobs_decoder_place_bytes(
+    TEST_ASSERT_EQUAL(encoded_length, cobs_decoder_place_bytes_circular(
                                           &cobs_decoder, buf, encoded_length));
 
-    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place(
+    TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_frame_in_place_circular(
                                             &cobs_decoder, &decoded_length));
     TEST_ASSERT_EQUAL_UINT32(decoded_length_expected, decoded_length);
     uint8_t frame[300];
     TEST_ASSERT_EQUAL_UINT32(
         decoded_length_expected,
-        cobs_decoder_fetch_frame(&cobs_decoder, frame, 300));
+        cobs_decoder_fetch_frame_circular(&cobs_decoder, frame, 300));
     TEST_ASSERT_EQUAL_UINT8_ARRAY(unencoded, frame, decoded_length);
   }
 }
 
-void wikipedia_examples_decode_in_place_sequential_partial(void) {
+void wikipedia_examples_decode_in_place_sequential_partial_circular(void) {
   uint8_t unencoded[2500];
   uint8_t encoded[2500];
   uint8_t dest[2500];
   uint8_t buf[300];
-  uint32_t encoded_length = example_encoded_all(encoded);
+  example_encoded_all(encoded);
   uint32_t decoded_length_expected = example_unencoded_all(unencoded);
 
   struct cobs_decoder cobs_decoder;
@@ -427,25 +498,27 @@ void wikipedia_examples_decode_in_place_sequential_partial(void) {
   uint8_t *dest_ptr = dest;
   uint8_t frames = 0;
   uint32_t loop_count = 0;
-  char msg[40];
+
   while (true) {
     loop_count++;
     // try decode
     uint32_t written = 0;
     postcard_return_t result =
-        cobs_decoder_frame_in_place(&cobs_decoder, &written);
+        cobs_decoder_frame_in_place_circular(&cobs_decoder, &written);
     if (result == POSTCARD_SUCCESS) {
       // found a frame
       frames++;
       // dump to dest
-      dest_ptr += cobs_decoder_fetch_frame(&cobs_decoder, dest_ptr, 2500);
+      dest_ptr +=
+          cobs_decoder_fetch_frame_circular(&cobs_decoder, dest_ptr, 2500);
 
       if (frames == 11) {
         break;
       }
     } else if (result == POSTCARD_COBS_DECODE_DATA_END) {
       // needs more data for frame
-      uint32_t written = cobs_decoder_place_bytes(&cobs_decoder, src_ptr, 10);
+      uint32_t written =
+          cobs_decoder_place_bytes_circular(&cobs_decoder, src_ptr, 10);
       if (written == 0) {
         TEST_ABORT();
       }
@@ -504,7 +577,7 @@ void decode_overflow(void) {
   uint32_t written;
   TEST_ASSERT_EQUAL(
       POSTCARD_COBS_DECODE_OVERFLOW,
-      cobs_decoder_frame(&cobs_decoder, unencoded, 200, &written));
+      cobs_decoder_frame_circular(&cobs_decoder, unencoded, 200, &written));
   TEST_ASSERT_EQUAL(200, written);
 }
 
@@ -518,7 +591,7 @@ void decode_invalid_zero(void) {
   uint32_t written;
   TEST_ASSERT_EQUAL(
       POSTCARD_COBS_DECODE_INVALID_ZERO,
-      cobs_decoder_frame(&cobs_decoder, unencoded, 300, &written));
+      cobs_decoder_frame_circular(&cobs_decoder, unencoded, 300, &written));
   TEST_ASSERT_EQUAL(3, written);
 }
 
@@ -532,7 +605,7 @@ void decode_leading_zero(void) {
   uint32_t written;
   TEST_ASSERT_EQUAL(
       POSTCARD_COBS_DECODE_LEADING_ZERO,
-      cobs_decoder_frame(&cobs_decoder, unencoded, 300, &written));
+      cobs_decoder_frame_circular(&cobs_decoder, unencoded, 300, &written));
   TEST_ASSERT_EQUAL(0, written);
 }
 
@@ -541,33 +614,40 @@ void data_length(void) {
   struct cobs_decoder cobs_decoder;
   cobs_decoder_init(&cobs_decoder, buf, 100, 0);
 
-  TEST_ASSERT_EQUAL(20, cobs_decoder_place_bytes(&cobs_decoder, buf, 20));
+  TEST_ASSERT_EQUAL(20,
+                    cobs_decoder_place_bytes_circular(&cobs_decoder, buf, 20));
   uint8_t *ptr;
-  TEST_ASSERT_EQUAL(79, cobs_decoder_get_data_ptr(&cobs_decoder, ptr));
-  TEST_ASSERT_EQUAL(20, cobs_decoder_place_bytes(&cobs_decoder, buf, 20));
-  TEST_ASSERT_EQUAL(59, cobs_decoder_get_data_ptr(&cobs_decoder, ptr));
-  TEST_ASSERT_EQUAL(59, cobs_decoder_place_bytes(&cobs_decoder, buf, 60));
-  TEST_ASSERT_EQUAL(0, cobs_decoder_get_data_ptr(&cobs_decoder, ptr));
+  TEST_ASSERT_EQUAL(79,
+                    cobs_decoder_get_data_ptr_circular(&cobs_decoder, &ptr));
+  TEST_ASSERT_EQUAL(20,
+                    cobs_decoder_place_bytes_circular(&cobs_decoder, buf, 20));
+  TEST_ASSERT_EQUAL(59,
+                    cobs_decoder_get_data_ptr_circular(&cobs_decoder, &ptr));
+  TEST_ASSERT_EQUAL(59,
+                    cobs_decoder_place_bytes_circular(&cobs_decoder, buf, 60));
+  TEST_ASSERT_EQUAL(0, cobs_decoder_get_data_ptr_circular(&cobs_decoder, &ptr));
 
   cobs_decoder_init(&cobs_decoder, buf, 100, 0);
   // grab test
   uint32_t encoded_length = example_1_encoded(buf);
-  TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
-                    cobs_decoder_data_written(&cobs_decoder, encoded_length));
+  TEST_ASSERT_EQUAL(POSTCARD_SUCCESS, cobs_decoder_data_written_circular(
+                                          &cobs_decoder, encoded_length));
   TEST_ASSERT_EQUAL(100 - 1 - encoded_length,
-                    cobs_decoder_get_data_ptr(&cobs_decoder, ptr));
+                    cobs_decoder_get_data_ptr_circular(&cobs_decoder, &ptr));
 }
 
 // not needed when using generate_test_runner.rb
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(wikipedia_examples_encode);
-  RUN_TEST(wikipedia_examples_decode);
-  RUN_TEST(wikipedia_examples_decode_in_place);
-  RUN_TEST(wikipedia_examples_decode_sequential);
-  RUN_TEST(wikipedia_examples_decode_sequential_partial);
-  RUN_TEST(wikipedia_examples_decode_in_place_sequential);
-  RUN_TEST(wikipedia_examples_decode_in_place_sequential_partial);
+  RUN_TEST(wikipedia_examples_decode_circular);
+  RUN_TEST(wikipedia_examples_decode_short);
+  RUN_TEST(wikipedia_examples_decode_short_sequential);
+  RUN_TEST(wikipedia_examples_decode_in_place_circular);
+  RUN_TEST(wikipedia_examples_decode_sequential_circular);
+  RUN_TEST(wikipedia_examples_decode_sequential_partial_circular);
+  RUN_TEST(wikipedia_examples_decode_in_place_sequential_circular);
+  RUN_TEST(wikipedia_examples_decode_in_place_sequential_partial_circular);
   RUN_TEST(encode_overflow);
   RUN_TEST(decode_overread);
   RUN_TEST(decode_overflow);

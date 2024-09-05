@@ -12,6 +12,8 @@ typedef enum postcard_return {
   POSTCARD_COBS_DECODE_INVALID_ZERO,
   // Try to read a byte beyond the data in the buffer
   POSTCARD_COBS_DECODE_DATA_END,
+  // Next points to end of buffer
+  POSTCARD_COBS_DECODE_BUFFER_END,
   // Try to write beyond buffer during decoding
   POSTCARD_COBS_DECODE_OVERFLOW,
   // Try to write beyond cobs_decoder buffer

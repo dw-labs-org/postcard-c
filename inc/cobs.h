@@ -44,7 +44,7 @@ struct cobs_decoder {
 
 // ========================= Encoder ====================================
 
-// initialise the cobs_decoder struct for either encoding or decoding
+// initialise the cobs_encoder struct for encoding
 void cobs_encoder_init(struct cobs_encoder *cobs_encoder, uint8_t *buf,
                        uint32_t size);
 
@@ -80,43 +80,81 @@ void cobs_decoder_reset(struct cobs_decoder *cobs_decoder);
 
 // Get a pointer to the next place to place data bytes and space left
 uint32_t cobs_decoder_get_data_ptr(struct cobs_decoder *cobs_decoder,
-                                   uint8_t *ptr);
+                                   uint8_t **ptr);
 
 // Inform the encoder about data written to the buffer
 postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
                                             uint32_t size);
 
+// Start the decoding process
+postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder);
+
+// End the frame decoding process
+postcard_return_t cobs_decoder_end_frame(struct cobs_decoder *cobs_decoder);
+
+// if byte should be 0, sets as 0, otherwise leaves as is
+// Only used for messages < 255 bytes
+postcard_return_t cobs_decoder_decode_byte_in_place_short(
+    struct cobs_decoder *cobs_decoder);
+
+// Faster version than looping over cobs_decoder_decode_byte_in_place_short
+postcard_return_t cobs_decoder_decode_bytes_in_place_short(
+    struct cobs_decoder *cobs_decoder);
+
+// Keeps decoding remaining bytes in buffer until a frame is found
+postcard_return_t cobs_decoder_frame_in_place_short(
+    struct cobs_decoder *cobs_decoder);
+
+// get pointers to the start and end of the frame
+// marks the frame as "read" so data can be moved over it
+void cobs_decoder_frame_ptrs(struct cobs_decoder *cobs_decoder, uint8_t **start,
+                             uint8_t **end);
+
+// Shift valid data to start of buffer to allow space for more data
+uint32_t cobs_decoder_shift_data(struct cobs_decoder *cobs_decoder);
+
+// ========================= Decoder circular buffer ======================
+// Get a pointer to the next place to place data bytes and space left
+uint32_t cobs_decoder_get_data_ptr_circular(struct cobs_decoder *cobs_decoder,
+                                            uint8_t **ptr);
+
+// Inform the encoder about data written to the buffer
+postcard_return_t cobs_decoder_data_written_circular(
+    struct cobs_decoder *cobs_decoder, uint32_t size);
+
 // Get the index of the next zero from first byte and setup cobs_decoder for
 // decode
-postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder);
+postcard_return_t cobs_decoder_start_frame_circular(
+    struct cobs_decoder *cobs_decoder);
 // Checks that the end of the frame is valid (last marker points to framing 0)
-postcard_return_t cobs_decoder_end_frame(struct cobs_decoder *cobs_decoder);
+postcard_return_t cobs_decoder_end_frame_circular(
+    struct cobs_decoder *cobs_decoder);
 
 // Decode the cobs_decoder frame into a buffer. Write number of bytes to
 // written. size is buf size; Will return an error if the frame is invalid,
 // cobs_decoder buffer end is reached or buf end is reached.
-postcard_return_t cobs_decoder_frame(struct cobs_decoder *cobs_decoder,
-                                     uint8_t *buf, uint32_t size,
-                                     uint32_t *written);
+postcard_return_t cobs_decoder_frame_circular(struct cobs_decoder *cobs_decoder,
+                                              uint8_t *buf, uint32_t size,
+                                              uint32_t *written);
 // Decode the cobs_decoder frame in place.
 // Will return an error if the frame is invalid or cobs_decoder buffer end is
 // reached
-postcard_return_t cobs_decoder_frame_in_place(struct cobs_decoder *cobs_decoder,
-                                              uint32_t *written);
+postcard_return_t cobs_decoder_frame_in_place_circular(
+    struct cobs_decoder *cobs_decoder, uint32_t *written);
 
 // Read a cobs_decoder encoded byte from the buffer, write it to value
-postcard_return_t cobs_decoder_read_byte(struct cobs_decoder *cobs_decoder,
-                                         uint8_t *value);
+postcard_return_t cobs_decoder_read_byte_circular(
+    struct cobs_decoder *cobs_decoder, uint8_t *value);
 // Read cobs_decoder encoded bytes from the cobs_decoder buffer, write it to buf
-postcard_return_t cobs_decoder_read_bytes(struct cobs_decoder *cobs_decoder,
-                                          uint8_t *buf, uint32_t size);
+postcard_return_t cobs_decoder_read_bytes_circular(
+    struct cobs_decoder *cobs_decoder, uint8_t *buf, uint32_t size);
 
 // Place up to size bytes from buf into the decoding circular buffer
-uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
-                                  uint8_t *buf, uint32_t size);
+uint32_t cobs_decoder_place_bytes_circular(struct cobs_decoder *cobs_decoder,
+                                           uint8_t *buf, uint32_t size);
 
 // Pull a frame out of the decoded in place buffer.
-uint32_t cobs_decoder_fetch_frame(struct cobs_decoder *cobs_decoder,
-                                  uint8_t *buf, uint32_t size);
+uint32_t cobs_decoder_fetch_frame_circular(struct cobs_decoder *cobs_decoder,
+                                           uint8_t *buf, uint32_t size);
 
 #endif
