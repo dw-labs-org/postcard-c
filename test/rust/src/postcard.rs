@@ -11,11 +11,11 @@ mod test {
     fn decode_u8() {
         let mut buf = [0; 4];
         for value in 0..u8::MAX {
-            postcard::to_slice(&value, &mut buf).unwrap();
+            let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u8;
             unsafe {
                 assert_eq!(
-                    postcard_return_POSTCARD_SUCCESS,
+                    slice.len() as u32,
                     postcard_decode_u8(
                         buf.as_mut_ptr(),
                         buf.as_mut_ptr().add(4),
@@ -31,11 +31,11 @@ mod test {
     fn decode_u16() {
         let mut buf = [0; 4];
         for value in 0..u16::MAX {
-            postcard::to_slice(&value, &mut buf).unwrap();
+            let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u16;
             unsafe {
                 assert_eq!(
-                    postcard_return_POSTCARD_SUCCESS,
+                    slice.len() as u32,
                     postcard_decode_u16(
                         buf.as_mut_ptr(),
                         buf.as_mut_ptr().add(4),
@@ -53,11 +53,11 @@ mod test {
         let mut buf = [0; 8];
         for i in 0..u16::MAX {
             let value: u32 = rng.gen();
-            postcard::to_slice(&value, &mut buf).unwrap();
+            let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u32;
             unsafe {
                 assert_eq!(
-                    postcard_return_POSTCARD_SUCCESS,
+                    slice.len() as u32,
                     postcard_decode_u32(
                         buf.as_mut_ptr(),
                         buf.as_mut_ptr().add(8),
@@ -75,11 +75,11 @@ mod test {
         let mut buf = [0; 8];
         for i in 0..u16::MAX {
             let value: f32 = rng.gen();
-            postcard::to_slice(&value, &mut buf).unwrap();
+            let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0.0f32;
             unsafe {
                 assert_eq!(
-                    postcard_return_POSTCARD_SUCCESS,
+                    slice.len() as u32,
                     postcard_decode_float(
                         buf.as_mut_ptr(),
                         buf.as_mut_ptr().add(8),
@@ -97,11 +97,11 @@ mod test {
         let mut buf = [0; 10];
         for i in 0..u16::MAX {
             let value: f64 = rng.gen();
-            postcard::to_slice(&value, &mut buf).unwrap();
+            let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0.0f64;
             unsafe {
                 assert_eq!(
-                    postcard_return_POSTCARD_SUCCESS,
+                    slice.len() as u32,
                     postcard_decode_double(
                         buf.as_mut_ptr(),
                         buf.as_mut_ptr().add(8),

@@ -42,83 +42,75 @@ uint32_t encode_float(uint8_t *buf, float value) {
   return 4;
 }
 
-postcard_return_t postcard_decode_u8(uint8_t *buf, uint8_t *end,
-                                     uint8_t *value) {
+uint32_t postcard_decode_u8(uint8_t *buf, uint8_t *end, uint8_t *value) {
   if (buf == end) {
-    return POSTCARD_EOF;
+    return 0;
   }
-  *value = *buf++;
-  return POSTCARD_SUCCESS;
+  *value = *buf;
+  return 1;
 }
 
-postcard_return_t postcard_decode_u16(uint8_t *buf, uint8_t *end,
-                                      uint16_t *value) {
+uint32_t postcard_decode_u16(uint8_t *buf, uint8_t *end, uint16_t *value) {
   uint16_t result = 0;
   for (uint8_t i = 0; i < 3; i++) {
     if (buf == end) {
-      return POSTCARD_EOF;
+      return 0;
     }
     uint8_t byte = *(buf++);
     if (byte < (1 << 7)) {
       // final byte
       result |= (byte << (7 * i));
       *value = result;
-      return POSTCARD_SUCCESS;
+      return i + 1;
     } else {
       result |= ((byte & 0x7F) << (7 * i));
     }
   }
   *value = result;
-  return POSTCARD_SUCCESS;
+  return 3;
 }
 
-postcard_return_t postcard_decode_u32(uint8_t *buf, uint8_t *end,
-                                      uint32_t *value) {
+uint32_t postcard_decode_u32(uint8_t *buf, uint8_t *end, uint32_t *value) {
   uint32_t result = 0;
   for (uint8_t i = 0; i < 5; i++) {
     if (buf == end) {
-      return POSTCARD_EOF;
+      return 0;
     }
     uint8_t byte = *(buf++);
     if (byte < (1 << 7)) {
       // final byte
       result |= (byte << (7 * i));
       *value = result;
-      return POSTCARD_SUCCESS;
+      return i + 1;
     } else {
       result |= ((byte & 0x7F) << (7 * i));
     }
   }
   *value = result;
-  return POSTCARD_SUCCESS;
+  return 5;
 }
 
-postcard_return_t postcard_decode_u64(uint8_t *buf, uint8_t *end,
-                                      uint64_t *value);
+uint32_t postcard_decode_u64(uint8_t *buf, uint8_t *end, uint64_t *value);
 
-postcard_return_t postcard_decode_float(uint8_t *buf, uint8_t *end,
-                                        float *value) {
+uint32_t postcard_decode_float(uint8_t *buf, uint8_t *end, float *value) {
   if (end - buf >= 4) {
     memcpy(value, buf, 4);
-    buf += 4;
-    return POSTCARD_SUCCESS;
+    return 4;
   } else {
     return POSTCARD_EOF;
   }
 }
 
-postcard_return_t postcard_decode_double(uint8_t *buf, uint8_t *end,
-                                         double *value) {
+uint32_t postcard_decode_double(uint8_t *buf, uint8_t *end, double *value) {
   if (end - buf >= 8) {
     memcpy(value, buf, 8);
-    buf += 8;
-    return POSTCARD_SUCCESS;
+    return 8;
   } else {
     return POSTCARD_EOF;
   }
 }
 
-postcard_return_t postcard_decode_discriminant(uint8_t *buf, uint8_t *end,
-                                               uint32_t *value) {
+uint32_t postcard_decode_discriminant(uint8_t *buf, uint8_t *end,
+                                      uint32_t *value) {
   return postcard_decode_u32(buf, end, value);
 }
