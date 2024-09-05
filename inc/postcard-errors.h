@@ -22,5 +22,7 @@ typedef enum postcard_return {
   POSTCARD_COBS_DECODE_FRAME_OVERFLOW,
   // Written data over start of unprocessed data
   POSTCARD_COBS_DECODE_DATA_OVERFLOW,
+  // No data left for postcode decode
+  POSTCARD_EOF,
 } postcard_return_t;
 #endif

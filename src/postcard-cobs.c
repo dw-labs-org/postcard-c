@@ -11,7 +11,7 @@ void postcard_cobs_encode_u8(struct cobs_encoder *cobs_encoder, uint8_t value) {
 void postcard_cobs_encode_u16(struct cobs_encoder *cobs_encoder,
                               uint16_t value) {
   if (value <= ((1 << 7) - 1)) {
-    cobs_encoder_write_byte(cobs_encoder, 0xFF & value);
+    cobs_encoder_write_byte(cobs_encoder, value);
   } else if (value <= ((1 << 14) - 1)) {
     cobs_encoder_write_byte(cobs_encoder, (0x7F & value) | (1 << 7));
     cobs_encoder_write_byte(cobs_encoder, value >> 7);
