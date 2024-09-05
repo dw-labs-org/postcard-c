@@ -181,6 +181,21 @@ void cobs_decoder_reset(struct cobs_decoder *cobs_decoder) {
   cobs_decoder->partial_decode = false;
 }
 
+uint32_t cobs_decoder_get_data_ptr(struct cobs_decoder *cobs_decoder,
+                                   uint8_t *ptr) {
+  // start of where data can be placed
+  ptr = cobs_decoder->data_end;
+  // get next blocker
+  uint8_t *end = cobs_decoder->end - 1;
+  if (cobs_decoder->next >= ptr) {
+    end = cobs_decoder->next;
+  }
+  if (cobs_decoder->frame_start < end && cobs_decoder->frame_start >= ptr) {
+    end = cobs_decoder->frame_start;
+  }
+  return end - ptr;
+}
+
 postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
                                             uint32_t size) {
   uint8_t *data_end = cobs_decoder->data_end;
