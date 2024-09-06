@@ -125,6 +125,9 @@ uint32_t cobs_decoder_get_data_ptr_circular(struct cobs_decoder *cobs_decoder,
 postcard_return_t cobs_decoder_data_written_circular(
     struct cobs_decoder *cobs_decoder, uint32_t size);
 
+// Reset for next frame
+void cobs_decoder_reset_circular(struct cobs_decoder *cobs_decoder);
+
 // Get the index of the next zero from first byte and setup cobs_decoder for
 // decode
 postcard_return_t cobs_decoder_start_frame_circular(

@@ -174,6 +174,17 @@ postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
 
 void cobs_decoder_reset(struct cobs_decoder *cobs_decoder) {
   cobs_decoder->next = cobs_decoder->buf;
+  cobs_decoder->data_end = cobs_decoder->buf;
+  cobs_decoder->frame_start = 0;
+  cobs_decoder->frame_end = 0;
+  cobs_decoder->zero = 0;
+  cobs_decoder->overhead = false;
+  cobs_decoder->full = false;
+  cobs_decoder->partial_decode = false;
+}
+
+void cobs_decoder_reset_circular(struct cobs_decoder *cobs_decoder) {
+  cobs_decoder->next = cobs_decoder->buf;
   cobs_decoder->full = false;
   cobs_decoder->data_end = cobs_decoder->buf;
   cobs_decoder->frame_start = cobs_decoder->end;
