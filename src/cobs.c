@@ -163,8 +163,8 @@ postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
   cobs_decoder->next = buf;
   cobs_decoder->end = buf + size;
   cobs_decoder->data_end = buf;
-  cobs_decoder->frame_start = cobs_decoder->end;
-  cobs_decoder->frame_end = cobs_decoder->end;
+  cobs_decoder->frame_start = 0;
+  cobs_decoder->frame_end = 0;
   cobs_decoder->zero = 0;
   cobs_decoder->overhead = false;
   cobs_decoder->full = false;
@@ -324,6 +324,10 @@ postcard_return_t cobs_decoder_frame_in_place_short(
   } else {
     return result;
   }
+}
+
+bool cobs_decoder_pending_frame(struct cobs_decoder *cobs_decoder) {
+  return cobs_decoder->frame_start != 0 && cobs_decoder->frame_end != 0;
 }
 
 void cobs_decoder_frame_ptrs(struct cobs_decoder *cobs_decoder, uint8_t **start,

@@ -108,6 +108,9 @@ postcard_return_t cobs_decoder_decode_bytes_in_place_short(
 postcard_return_t cobs_decoder_frame_in_place_short(
     struct cobs_decoder *cobs_decoder);
 
+// Returns true if a frame is waiting to be read
+bool cobs_decoder_pending_frame(struct cobs_decoder *cobs_decoder);
+
 // get pointers to the start and end of the frame
 // marks the frame as "read" so data can be moved over it
 void cobs_decoder_frame_ptrs(struct cobs_decoder *cobs_decoder, uint8_t **start,
