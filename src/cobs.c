@@ -4,7 +4,7 @@
 #include "stdio.h"
 
 // declaration
-postcard_return_t cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder);
+void cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder);
 
 // ============================= Encoder ================================
 // assign buffer and length
@@ -14,11 +14,41 @@ void cobs_encoder_init(struct cobs_encoder *cobs_encoder, uint8_t *buf,
   cobs_encoder->next = buf;
   cobs_encoder->end = buf + size;
   cobs_encoder->zero = 0;
+  cobs_encoder->frame_end = cobs_encoder->buf;
 }
 
 void cobs_encoder_reset(struct cobs_encoder *cobs_encoder) {
   cobs_encoder->next = cobs_encoder->buf;
   cobs_encoder->zero = 0;
+}
+
+uint32_t cobs_encoder_free_space(struct cobs_encoder *cobs_encoder) {
+  return cobs_encoder->end - cobs_encoder->frame_end;
+}
+
+uint32_t cobs_encoder_data_ptr(struct cobs_encoder *cobs_encoder,
+                               uint8_t **ptr) {
+  *ptr = cobs_encoder->buf;
+  return cobs_encoder->next - cobs_encoder->buf;
+}
+
+uint32_t cobs_encoder_data_ptr_full_frames(struct cobs_encoder *cobs_encoder,
+                                           uint8_t **ptr) {
+  *ptr = cobs_encoder->buf;
+  return cobs_encoder->frame_end - cobs_encoder->buf;
+}
+
+void cobs_encoder_data_read(struct cobs_encoder *cobs_encoder, uint32_t size) {
+  // shift all the data between buf+ size and next to buf
+  uint32_t length = cobs_encoder->next - cobs_encoder->buf + size;
+  memcpy(cobs_encoder->buf, cobs_encoder->buf + size, length);
+  // subtract size from pointers
+  cobs_encoder->next -= size;
+  if (cobs_encoder->frame_end - cobs_encoder->buf >= size) {
+    cobs_encoder->frame_end -= size;
+  } else {
+    cobs_encoder->frame_end = cobs_encoder->buf;
+  }
 }
 
 // Inserts the framing 0 and the first marker byte
@@ -30,7 +60,10 @@ void cobs_encoder_start_frame(struct cobs_encoder *cobs_encoder) {
 }
 
 postcard_return_t cobs_encoder_end_frame(struct cobs_encoder *cobs_encoder) {
-  return cobs_encoder_insert_zero(cobs_encoder);
+  // Insert final 0 and
+  cobs_encoder_insert_zero(cobs_encoder);
+  cobs_encoder->frame_end = cobs_encoder->next;
+  return POSTCARD_SUCCESS;
 }
 
 postcard_return_t cobs_encoder_frame(struct cobs_encoder *cobs_encoder,
@@ -63,7 +96,8 @@ postcard_return_t cobs_encoder_write_byte(struct cobs_encoder *cobs_encoder,
 
   // If byte is zero, insert marker
   if (byte == 0) {
-    return cobs_encoder_insert_zero(cobs_encoder);
+    cobs_encoder_insert_zero(cobs_encoder);
+    return POSTCARD_SUCCESS;
   } else {
     // otherwise insert byte
     *(cobs_encoder->next) = byte;
@@ -132,14 +166,13 @@ postcard_return_t cobs_encoder_write_bytes(struct cobs_encoder *cobs_encoder,
   }
 }
 
-postcard_return_t cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder) {
+void cobs_encoder_insert_zero(struct cobs_encoder *cobs_encoder) {
   // Go back and set marker
   *(cobs_encoder->next - cobs_encoder->zero) = cobs_encoder->zero;
   // Add a byte
   *(cobs_encoder->next) = 0;
   cobs_encoder->next++;
   cobs_encoder->zero = 1;
-  return POSTCARD_SUCCESS;
 }
 
 // ============================== Decoder ===============================

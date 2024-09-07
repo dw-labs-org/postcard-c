@@ -12,6 +12,8 @@ struct cobs_encoder {
   uint8_t *end;
   // Pointer to next byte location
   uint8_t *next;
+  // End of most recent frame written to buffer
+  uint8_t *frame_end;
   // Number of bytes since previous zero for encoding,
   uint8_t zero;
 };
@@ -51,6 +53,20 @@ void cobs_encoder_init(struct cobs_encoder *cobs_encoder, uint8_t *buf,
 // reset encoder state ready for call to cobs_encode_start_frame
 void cobs_encoder_reset(struct cobs_encoder *cobs_encoder);
 
+// check how much free space is in buffer
+uint32_t cobs_encoder_free_space(struct cobs_encoder *cobs_encoder);
+
+// Get ptr to data and how big it is
+uint32_t cobs_encoder_data_ptr(struct cobs_encoder *cobs_encoder,
+                               uint8_t **ptr);
+
+// Get ptr to data and how big it is (full frames only)
+uint32_t cobs_encoder_data_ptr_full_frames(struct cobs_encoder *cobs_encoder,
+                                           uint8_t **ptr);
+
+// inform encoder about data read from the buffer
+void cobs_encoder_data_read(struct cobs_encoder *cobs_encoder, uint32_t size);
+
 // insert framing and first marker 0
 void cobs_encoder_start_frame(struct cobs_encoder *cobs_encoder);
 
@@ -66,6 +82,15 @@ postcard_return_t cobs_encoder_frame(struct cobs_encoder *cobs_encoder,
 // Write a byte to the buffer in cobs_decoder struct
 postcard_return_t cobs_encoder_write_byte(struct cobs_encoder *cobs_encoder,
                                           uint8_t byte);
+
+// Write a byte without checking for a buffer overflow
+void cobs_encoder_write_byte_unchecked(struct cobs_encoder *cobs_encoder,
+                                       uint8_t byte);
+
+// Write a byte without checking for overhead byte or buffer overflow
+void cobs_encoder_write_byte_unchecked_no_overhead(
+    struct cobs_encoder *cobs_encoder, uint8_t byte);
+
 // Write a byte array to the buffer in the cobs_decoder struct
 postcard_return_t cobs_encoder_write_bytes(struct cobs_encoder *cobs_encoder,
                                            uint8_t *bytes, uint32_t size);
