@@ -253,6 +253,17 @@ postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
   }
 }
 
+uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
+                                  uint8_t *buf, uint32_t size) {
+  uint32_t space = cobs_decoder->end - cobs_decoder->data_end;
+  if (space < size) {
+    size = space;
+  }
+  memcpy(cobs_decoder->data_end, buf, size);
+  cobs_decoder->data_end += size;
+  return size;
+}
+
 postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
   // check if next is not pointing to data end or buffer end
   if (cobs_decoder->next == cobs_decoder->end) {

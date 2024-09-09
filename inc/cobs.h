@@ -114,6 +114,9 @@ uint32_t cobs_decoder_get_data_ptr(struct cobs_decoder *cobs_decoder,
 postcard_return_t cobs_decoder_data_written(struct cobs_decoder *cobs_decoder,
                                             uint32_t size);
 
+uint32_t cobs_decoder_place_bytes(struct cobs_decoder *cobs_decoder,
+                                  uint8_t *buf, uint32_t size);
+
 // Start the decoding process
 postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder);
 
