@@ -46,7 +46,7 @@ bool postcard_decode_u8(uint8_t **buf, uint8_t *end, uint8_t *value) {
   if (*buf == end) {
     return false;
   }
-  *value = *(*buf++);
+  *value = *((*buf)++);
   return true;
 }
 
@@ -97,6 +97,7 @@ bool postcard_decode_u64(uint8_t **buf, uint8_t *end, uint64_t *value) {
 bool postcard_decode_float(uint8_t **buf, uint8_t *end, float *value) {
   if (end - *buf >= 4) {
     memcpy(value, *buf, 4);
+    *buf += 4;
     return true;
   } else {
     return false;
@@ -106,6 +107,7 @@ bool postcard_decode_float(uint8_t **buf, uint8_t *end, float *value) {
 bool postcard_decode_double(uint8_t **buf, uint8_t *end, double *value) {
   if (end - *buf >= 8) {
     memcpy(value, *buf, 8);
+    *buf += 8;
     return true;
   } else {
     return false;
