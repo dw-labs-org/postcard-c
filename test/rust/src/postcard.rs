@@ -14,14 +14,12 @@ mod test {
             let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u8;
             unsafe {
-                assert_eq!(
-                    slice.len() as u32,
-                    postcard_decode_u8(
-                        buf.as_mut_ptr(),
-                        buf.as_mut_ptr().add(4),
-                        &mut decoded as *mut u8,
-                    )
-                );
+                let start = &mut buf.as_mut_ptr();
+                assert!(postcard_decode_u8(
+                    start,
+                    buf.as_mut_ptr().add(4),
+                    &mut decoded as *mut u8,
+                ));
             }
             assert_eq!(value, decoded);
         }
@@ -34,14 +32,12 @@ mod test {
             let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u16;
             unsafe {
-                assert_eq!(
-                    slice.len() as u32,
-                    postcard_decode_u16(
-                        buf.as_mut_ptr(),
-                        buf.as_mut_ptr().add(4),
-                        &mut decoded as *mut u16,
-                    )
-                );
+                let start = &mut buf.as_mut_ptr();
+                assert!(postcard_decode_u16(
+                    start as *mut *mut u8,
+                    buf.as_mut_ptr().add(4),
+                    &mut decoded as *mut u16,
+                ));
             }
             assert_eq!(value, decoded);
         }
@@ -56,14 +52,12 @@ mod test {
             let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0u32;
             unsafe {
-                assert_eq!(
-                    slice.len() as u32,
-                    postcard_decode_u32(
-                        buf.as_mut_ptr(),
-                        buf.as_mut_ptr().add(8),
-                        &mut decoded as *mut u32,
-                    )
-                );
+                let start = &mut buf.as_mut_ptr();
+                assert!(postcard_decode_u32(
+                    start as *mut *mut u8,
+                    buf.as_mut_ptr().add(5),
+                    &mut decoded as *mut u32,
+                ));
             }
             assert_eq!(value, decoded);
         }
@@ -78,14 +72,12 @@ mod test {
             let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0.0f32;
             unsafe {
-                assert_eq!(
-                    slice.len() as u32,
-                    postcard_decode_float(
-                        buf.as_mut_ptr(),
-                        buf.as_mut_ptr().add(8),
-                        &mut decoded as *mut f32,
-                    )
-                );
+                let start = &mut buf.as_mut_ptr();
+                assert!(postcard_decode_float(
+                    start as *mut *mut u8,
+                    buf.as_mut_ptr().add(5),
+                    &mut decoded as *mut f32,
+                ));
             }
             assert_eq!(value, decoded);
         }
@@ -100,14 +92,12 @@ mod test {
             let slice = postcard::to_slice(&value, &mut buf).unwrap();
             let mut decoded = 0.0f64;
             unsafe {
-                assert_eq!(
-                    slice.len() as u32,
-                    postcard_decode_double(
-                        buf.as_mut_ptr(),
-                        buf.as_mut_ptr().add(8),
-                        &mut decoded as *mut f64,
-                    )
-                );
+                let start = &mut buf.as_mut_ptr();
+                assert!(postcard_decode_double(
+                    start as *mut *mut u8,
+                    buf.as_mut_ptr().add(10),
+                    &mut decoded as *mut f64,
+                ));
             }
             assert_eq!(value, decoded);
         }
