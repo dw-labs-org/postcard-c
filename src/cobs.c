@@ -277,8 +277,8 @@ postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
   }
   // First byte marks position of next zero
   cobs_decoder->zero = byte;
-  cobs_decoder->next++;
   cobs_decoder->frame_start = cobs_decoder->next;
+  cobs_decoder->next++;
   cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
   cobs_decoder->partial_decode = true;
   return POSTCARD_SUCCESS;
