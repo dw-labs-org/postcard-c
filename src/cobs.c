@@ -406,7 +406,7 @@ uint32_t cobs_decoder_shift_data(struct cobs_decoder *cobs_decoder) {
   if (cobs_decoder->frame_end != 0) {
     cobs_decoder->frame_end -= shift;
   }
-  return size;
+  return cobs_decoder->end - cobs_decoder->data_end;
 }
 
 // ============================== Circular ====================================
