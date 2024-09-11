@@ -277,8 +277,8 @@ postcard_return_t cobs_decoder_start_frame(struct cobs_decoder *cobs_decoder) {
   }
   // First byte marks position of next zero
   cobs_decoder->zero = byte;
-  cobs_decoder->frame_start = cobs_decoder->next;
   cobs_decoder->next++;
+  cobs_decoder->frame_start = cobs_decoder->next;
   cobs_decoder->overhead = cobs_decoder->zero == 0xFF;
   cobs_decoder->partial_decode = true;
   return POSTCARD_SUCCESS;
@@ -392,17 +392,19 @@ uint32_t cobs_decoder_shift_data(struct cobs_decoder *cobs_decoder) {
     // no active frame decode in process, next is first valid data
     start = cobs_decoder->next;
   };
+  // shift distance
+  uint32_t shift = start - cobs_decoder->buf;
   // number of bytes to shift
-  uint32_t size = start - cobs_decoder->buf;
+  uint32_t size = cobs_decoder->data_end - start;
   memcpy(cobs_decoder->buf, start, size);
   // update pointers
-  cobs_decoder->next -= size;
-  cobs_decoder->data_end -= size;
+  cobs_decoder->next -= shift;
+  cobs_decoder->data_end -= shift;
   if (cobs_decoder->frame_start != 0) {
-    cobs_decoder->frame_start -= size;
+    cobs_decoder->frame_start -= shift;
   }
   if (cobs_decoder->frame_end != 0) {
-    cobs_decoder->frame_end -= size;
+    cobs_decoder->frame_end -= shift;
   }
   return size;
 }
