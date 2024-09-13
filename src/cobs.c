@@ -39,8 +39,8 @@ uint32_t cobs_encoder_data_ptr_full_frames(struct cobs_encoder *cobs_encoder,
 }
 
 void cobs_encoder_data_read(struct cobs_encoder *cobs_encoder, uint32_t size) {
-  // shift all the data between buf+ size and next to buf
-  uint32_t length = cobs_encoder->next - cobs_encoder->buf + size;
+  // shift all the data between buf + size and next to buf
+  uint32_t length = cobs_encoder->next - (cobs_encoder->buf + size);
   memcpy(cobs_encoder->buf, cobs_encoder->buf + size, length);
   // subtract size from pointers
   cobs_encoder->next -= size;

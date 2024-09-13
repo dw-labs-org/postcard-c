@@ -280,6 +280,38 @@ void wikipedia_examples_encode(void) {
   return;
 }
 
+void wikipedia_examples_encode_sequential(void) {
+  uint8_t buf[300];
+  struct cobs_encoder cobs_encoder;
+  cobs_encoder_init(&cobs_encoder, buf, 300);
+  uint32_t encode_index = 0;
+  for (uint8_t example = 1; example <= 11; example++) {
+    uint8_t unencoded[300];
+    uint8_t encoded[300];
+
+    uint32_t encoded_length_expected = example_encoded(example, encoded);
+    uint32_t decoded_length = example_unencoded(example, unencoded);
+    // check for space
+    uint32_t space = cobs_encoder_free_space(&cobs_encoder);
+    if (space < encoded_length_expected) {
+      cobs_encoder_data_read(&cobs_encoder, encoded_length_expected - space);
+      TEST_ASSERT(cobs_encoder_free_space(&cobs_encoder) ==
+                  encoded_length_expected);
+    }
+    encode_index = cobs_encoder.next - cobs_encoder.buf;
+    cobs_encoder_start_frame(&cobs_encoder);
+    for (uint32_t i = 0; i < decoded_length; i++) {
+      TEST_ASSERT_EQUAL(POSTCARD_SUCCESS,
+                        cobs_encoder_write_byte(&cobs_encoder, unencoded[i]));
+    }
+    cobs_encoder_end_frame(&cobs_encoder);
+
+    TEST_ASSERT_EQUAL_UINT8_ARRAY(encoded, buf + encode_index,
+                                  encoded_length_expected);
+  }
+  return;
+}
+
 void wikipedia_examples_decode_circular(void) {
   for (uint8_t example = 1; example <= 11; example++) {
     uint8_t unencoded[300];
@@ -640,6 +672,7 @@ void data_length(void) {
 int main(void) {
   UNITY_BEGIN();
   RUN_TEST(wikipedia_examples_encode);
+  RUN_TEST(wikipedia_examples_encode_sequential);
   RUN_TEST(wikipedia_examples_decode_circular);
   RUN_TEST(wikipedia_examples_decode_short);
   RUN_TEST(wikipedia_examples_decode_short_sequential);
