@@ -95,6 +95,14 @@ void cobs_encoder_write_byte_unchecked_no_overhead(
 postcard_return_t cobs_encoder_write_bytes(struct cobs_encoder *cobs_encoder,
                                            uint8_t *bytes, uint32_t size);
 
+/// @brief Memcpy a frame directly into the buffer and increment pointers. Must
+/// check that there is enough space before with @ref cobs_encoder_free_space
+/// @param cobs_encoder
+/// @param buf
+/// @param size
+void cobs_encoder_direct_write(struct cobs_encoder *cobs_encoder, uint8_t *buf,
+                               uint32_t size);
+
 // ========================== Decoder ===================================
 // data_size is size of data already in buf to be decoded
 postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,

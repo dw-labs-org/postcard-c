@@ -188,6 +188,13 @@ postcard_return_t cobs_decoder_check_next(struct cobs_decoder *cobs_decoder) {
     return POSTCARD_SUCCESS;
 }
 
+void cobs_encoder_direct_write(struct cobs_encoder *cobs_encoder, uint8_t *buf,
+                               uint32_t size) {
+  memcpy(cobs_encoder->next, buf, size);
+  cobs_encoder->next += size;
+  cobs_encoder->frame_end = cobs_encoder->next;
+}
+
 // assign buffer and length
 postcard_return_t cobs_decoder_init(struct cobs_decoder *cobs_decoder,
                                     uint8_t *buf, uint32_t size,
